@@ -11,16 +11,6 @@ namespace winrt
             this->DataContext(*this);
         }
 
-        void load_markup(Windows::Foundation::Uri const& uri)
-        {
-            Windows::UI::Xaml::Application::LoadComponent(*this, uri);
-        }
-
-        void property_changed(hstring const& name)
-        {
-            m_changed(*this, Windows::UI::Xaml::Data::PropertyChangedEventArgs(name));
-        }
-
         Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& name)
         {
             return static_cast<D*>(this)->bind(name);
@@ -41,6 +31,16 @@ namespace winrt
         Windows::UI::Xaml::Interop::TypeName Type() const noexcept { return {}; }
 
     protected:
+
+        void load_markup(hstring const& uri)
+        {
+            Windows::UI::Xaml::Application::LoadComponent(*this, Uri(uri));
+        }
+
+        void property_changed(hstring const& name)
+        {
+            m_changed(*this, Windows::UI::Xaml::Data::PropertyChangedEventArgs(name));
+        }
 
         template <typename T>
         auto bind_property(T const& value)

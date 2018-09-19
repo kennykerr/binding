@@ -12,10 +12,22 @@ using namespace Windows::UI::Xaml::Data;
 
 struct MainPage : xaml_binding<MainPage, PageT>
 {
+    hstring m_text{ L"0" };
+
     MainPage()
     {
-        load_markup(Uri(L"ms-appx:///MainPage.xaml"));
+        load_markup(L"ms-appx:///MainPage.xaml");
         update_async();
+    }
+
+    ICustomProperty bind(hstring const& name)
+    {
+        if (name == L"DisplayText")
+        {
+            return bind_property(m_text);
+        }
+
+        return {};
     }
 
     IAsyncAction update_async()
@@ -32,18 +44,6 @@ struct MainPage : xaml_binding<MainPage, PageT>
             property_changed(L"DisplayText");
         }
     }
-
-    ICustomProperty bind(hstring const& name)
-    {
-        if (name == L"DisplayText")
-        {
-            return bind_property(m_text);
-        }
-
-        return {};
-    }
-
-    hstring m_text{ L"0" };
 };
 
 struct App : ApplicationT<App>
