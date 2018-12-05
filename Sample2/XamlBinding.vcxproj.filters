@@ -30,6 +30,7 @@
     <None Include="XamlMarkup_TemporaryKey.pfx">
       <Filter>Package</Filter>
     </None>
+    <None Include="MyControl.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Package">

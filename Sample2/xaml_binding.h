@@ -2,165 +2,65 @@
 
 namespace winrt
 {
-    struct xaml_binding_member : implements<xaml_binding_member, Windows::UI::Xaml::Markup::IXamlMember>
-    {
-        bool IsAttachable() const
-        {
-            return {};
-        }
-
-        bool IsDependencyProperty() const
-        {
-            return {};
-        }
-
-        bool IsReadOnly() const
-        {
-            return {};
-        }
-
-        hstring Name() const
-        {
-            return {};
-        }
-
-        Windows::UI::Xaml::Markup::IXamlType TargetType() const
-        {
-            return {};
-        }
-
-        Windows::UI::Xaml::Markup::IXamlType Type() const
-        {
-            return {};
-        }
-
-        Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const& instance) const
-        {
-            return box_value(L"Value");
-        }
-
-        void SetValue(Windows::Foundation::IInspectable const& instance, Windows::Foundation::IInspectable const& value) const
-        {
-        }
-    };
-
-    struct xaml_binding_type : implements<xaml_binding_type, Windows::UI::Xaml::Markup::IXamlType>
-    {
-        Windows::UI::Xaml::Markup::IXamlType BaseType() const
-        {
-            return {};
-        }
-
-        Windows::UI::Xaml::Markup::IXamlMember ContentProperty() const
-        {
-            return {};
-        }
-
-        hstring FullName() const
-        {
-            return {};
-        }
-
-        bool IsArray() const
-        {
-            return {};
-        }
-
-        bool IsCollection() const
-        {
-            return {};
-        }
-
-        bool IsConstructible() const
-        {
-            return {};
-        }
-
-        bool IsDictionary() const
-        {
-            return {};
-        }
-
-        bool IsMarkupExtension() const
-        {
-            return {};
-        }
-
-        bool IsBindable() const
-        {
-            return true;
-        }
-
-        Windows::UI::Xaml::Markup::IXamlType ItemType() const
-        {
-            return {};
-        }
-
-        Windows::UI::Xaml::Markup::IXamlType KeyType() const
-        {
-            return {};
-        }
-
-        Windows::UI::Xaml::Interop::TypeName UnderlyingType() const
-        {
-            return {};
-        }
-
-        Windows::Foundation::IInspectable ActivateInstance() const
-        {
-            return {};
-        }
-
-        Windows::Foundation::IInspectable CreateFromString(hstring const& value) const
-        {
-            return {};
-        }
-
-        Windows::UI::Xaml::Markup::IXamlMember GetMember(hstring const& name) const
-        {
-            if (name == L"DisplayText")
-            {
-                return make< xaml_binding_member>();
-            }
-
-            return nullptr;
-        }
-
-        void AddToVector(Windows::Foundation::IInspectable const& instance, Windows::Foundation::IInspectable const& value) const
-        {
-        }
-
-        void AddToMap(Windows::Foundation::IInspectable const& instance, Windows::Foundation::IInspectable const& key, Windows::Foundation::IInspectable const& value) const
-        {
-        }
-
-        void RunInitializer() const
-        {
-        }
-    };
-
     template <typename D, typename... I>
     struct xaml_binding_app : Windows::UI::Xaml::ApplicationT<D, Windows::UI::Xaml::Markup::IXamlMetadataProvider, I...>
     {
-        Windows::UI::Xaml::Markup::IXamlType GetXamlType(Windows::UI::Xaml::Interop::TypeName const& type) const
-        {
-            return {};
-        }
 
         Windows::UI::Xaml::Markup::IXamlType GetXamlType(hstring const& fullName) const
         {
-            if (fullName == L"MainPage")
+            auto make_type = m_bindable_types.find(fullName);
+
+            if (make_type == m_bindable_types.end())
             {
-                return make<xaml_binding_type>();
+                return nullptr;
             }
 
-            return nullptr;
+            return make_type->second();
         }
 
-        com_array<Windows::UI::Xaml::Markup::XmlnsDefinition> GetXmlnsDefinitions() const
+        template <typename T> // TODO: make variadic
+        void add_bindable_types()
         {
-            return {};
+            m_bindable_types[T::GetRuntimeClassName()] = []
+            {
+                return make<xaml_binding_type<T>>();
+            };
         }
+
+        Windows::UI::Xaml::Markup::IXamlType GetXamlType(Windows::UI::Xaml::Interop::TypeName const& /*type*/) const noexcept { return {}; }
+        com_array<Windows::UI::Xaml::Markup::XmlnsDefinition> GetXmlnsDefinitions() const noexcept { return {}; }
+
+    private:
+
+        template <typename T>
+        struct xaml_binding_type : implements<xaml_binding_type<T>, Windows::UI::Xaml::Markup::IXamlType>
+        {
+            Windows::Foundation::IInspectable ActivateInstance() const
+            {
+                return make<T>();
+            }
+
+            Windows::UI::Xaml::Markup::IXamlType BaseType() const noexcept { return {}; }
+            Windows::UI::Xaml::Markup::IXamlMember ContentProperty() const noexcept { return {}; }
+            hstring FullName() const noexcept { return {}; }
+            bool IsArray() const noexcept { return {}; }
+            bool IsCollection() const noexcept { return {}; }
+            bool IsConstructible() const noexcept { return {}; }
+            bool IsDictionary() const noexcept { return {}; }
+            bool IsMarkupExtension() const noexcept { return {}; }
+            bool IsBindable() const noexcept { return {}; }
+            Windows::UI::Xaml::Markup::IXamlType ItemType() const noexcept { return {}; }
+            Windows::UI::Xaml::Markup::IXamlType KeyType() const noexcept { return {}; }
+            Windows::UI::Xaml::Interop::TypeName UnderlyingType() const noexcept { return {}; }
+            Windows::Foundation::IInspectable CreateFromString(hstring const& /*value*/) const noexcept { return {}; }
+            Windows::UI::Xaml::Markup::IXamlMember GetMember(hstring const& /*name*/) const noexcept { return {}; }
+            void AddToVector(Windows::Foundation::IInspectable const& /*instance*/, Windows::Foundation::IInspectable const& /*value*/) const noexcept {}
+            void AddToMap(Windows::Foundation::IInspectable const& /*instance*/, Windows::Foundation::IInspectable const& /*key*/, Windows::Foundation::IInspectable const& /*value*/) const noexcept {}
+            void RunInitializer() const noexcept {}
+        };
+
+        using make_bindable_type = Windows::UI::Xaml::Markup::IXamlType(*)();
+        std::map<winrt::hstring, make_bindable_type> m_bindable_types;
     };
 
     template <typename D, template <typename...> typename B, typename... I>
@@ -168,8 +68,12 @@ namespace winrt
     {
         xaml_binding()
         {
-            // TODO: circular reference?
-            this->DataContext(*this);
+            this->DataContext(*this); // TODO: circular reference?
+        }
+
+        Windows::UI::Xaml::Data::ICustomProperty bind(hstring const&) const
+        {
+            return nullptr;
         }
 
         Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& name)

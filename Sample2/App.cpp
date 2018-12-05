@@ -12,20 +12,23 @@ using namespace Windows::UI::Xaml::Data;
 
 struct MainPage : xaml_binding<MainPage, PageT>
 {
-    static hstring GetRuntimeClassName()
-    {
-        return L"MainPage";
-    }
-
-    hstring m_text{ L"0" };
-
     MainPage()
     {
-        TextBlock block;
-        block.Text(L"Hello");
-
         load_markup(L"ms-appx:///MainPage.xaml");
-        update_async();
+    }
+};
+
+struct MyControl : xaml_binding<MyControl, UserControlT>
+{
+    static hstring GetRuntimeClassName()
+    {
+        return L"App.MyControl";
+    }
+
+    MyControl()
+    {
+        load_markup(L"ms-appx:///MyControl.xaml");
+        UpdateAsync();
     }
 
     ICustomProperty bind(hstring const& name)
@@ -35,10 +38,12 @@ struct MainPage : xaml_binding<MainPage, PageT>
             return bind_property(m_text);
         }
 
-        return {};
+        return nullptr;
     }
 
-    IAsyncAction update_async()
+private:
+
+    IAsyncAction UpdateAsync()
     {
         apartment_context context;
         int value{};
@@ -52,10 +57,18 @@ struct MainPage : xaml_binding<MainPage, PageT>
             property_changed(L"DisplayText");
         }
     }
+
+    hstring m_text{ L"0" };
+
 };
 
 struct App : xaml_binding_app<App>
 {
+    App()
+    {
+        add_bindable_types<MyControl>();
+    }
+
     void OnLaunched(LaunchActivatedEventArgs const&)
     {
         auto window = Window::Current();
