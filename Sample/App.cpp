@@ -17,7 +17,7 @@ struct MainPage : xaml_binding<MainPage, PageT>
     MainPage()
     {
         load_markup(L"ms-appx:///MainPage.xaml");
-        update_async();
+        UpdateAsync();
     }
 
     ICustomProperty bind(hstring const& name)
@@ -30,7 +30,7 @@ struct MainPage : xaml_binding<MainPage, PageT>
         return {};
     }
 
-    IAsyncAction update_async()
+    IAsyncAction UpdateAsync()
     {
         apartment_context context;
         int value{};
