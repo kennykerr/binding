@@ -25,12 +25,13 @@ namespace winrt
         template <typename T>
         static bool add()
         {
-            return registry().add_type({
+            return registry().add_type(
+            {
                 T::GetRuntimeClassName(),
-                [] { return make<T>().as<Windows::Foundation::IInspectable>(); },
-                get(L"Object"), // TODO : Page, UserControl, etc.
+                [] { return make<T>(); },
+                get(L"Object"),
                 [](hstring const& memberName) { return T::GetMember(memberName); }
-                });
+            });
         }
 
         static Windows::UI::Xaml::Markup::IXamlType get(hstring const& typeName)
@@ -42,73 +43,77 @@ namespace winrt
 
         struct xaml_type : implements<xaml_type, Windows::UI::Xaml::Markup::IXamlType>
         {
-            xaml_type(type_info const& typeInfo) :
-                m_typeInfo(typeInfo)
+            xaml_type(type_info const& info) :
+                m_info(info)
             {
             }
 
             hstring FullName() const
             {
-                return m_typeInfo.name;
+                return m_info.name;
             }
 
-            Windows::Foundation::IInspectable ActivateInstance() const
+            auto ActivateInstance() const
             {
-                return m_typeInfo.create();
+                return m_info.create();
             }
 
-            Windows::UI::Xaml::Markup::IXamlType BaseType() const
+            auto BaseType() const
             {
-                return m_typeInfo.base;
+                return m_info.base;
             }
 
             bool IsConstructible() const
             {
-                return m_typeInfo.create != nullptr;
+                return m_info.create != nullptr;
             }
 
             Windows::UI::Xaml::Interop::TypeName UnderlyingType() const
             {
-                return { m_typeInfo.name, m_typeInfo.base ? Windows::UI::Xaml::Interop::TypeKind::Custom : Windows::UI::Xaml::Interop::TypeKind::Primitive };
+                return
+                {
+                    m_info.name,
+                    m_info.base ? Windows::UI::Xaml::Interop::TypeKind::Custom : Windows::UI::Xaml::Interop::TypeKind::Primitive
+                };
             }
 
             bool IsBindable() const
             {
-                return true; // TODO : if T implements INotifyPropertyChanged
+                return true;
             }
 
             Windows::UI::Xaml::Markup::IXamlMember GetMember(hstring const& name) const
             {
                 struct member : implements<member, Windows::UI::Xaml::Markup::IXamlMember>
                 {
-                    member(member_info const& memberInfo) :
-                        m_memberInfo(memberInfo)
+                    member(member_info&& info) :
+                        m_info(std::move(info))
                     {
                     }
 
                     hstring Name() const
                     {
-                        return m_memberInfo.name;
+                        return m_info.name;
                     }
 
                     Windows::UI::Xaml::Markup::IXamlType Type() const
                     {
-                        return m_memberInfo.type;
+                        return m_info.type;
                     }
 
                     Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const& instance) const
                     {
-                        return m_memberInfo.get(instance);
+                        return m_info.get(instance);
                     }
 
                     void SetValue(Windows::Foundation::IInspectable const& instance, Windows::Foundation::IInspectable const& value) const
                     {
-                        m_memberInfo.set(instance, value);
+                        m_info.set(instance, value);
                     }
 
                     bool IsReadOnly() const
                     {
-                        return m_memberInfo.set == nullptr;
+                        return m_info.set == nullptr;
                     }
 
                     bool IsAttachable() const noexcept { return {}; }
@@ -117,10 +122,10 @@ namespace winrt
 
                 private:
 
-                    member_info m_memberInfo;
+                    member_info m_info;
                 };
 
-                return make<member>(m_typeInfo.member(name));
+                return make<member>(m_info.member(name));
             }
 
             Windows::UI::Xaml::Markup::IXamlMember ContentProperty() const noexcept { return {}; }
@@ -137,7 +142,7 @@ namespace winrt
 
         private:
 
-            type_info m_typeInfo;
+            type_info m_info;
         };
 
         // TODO : can combine into a single collection
