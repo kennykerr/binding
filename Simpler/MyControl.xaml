@@ -1,0 +1,11 @@
+﻿<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+
+    <TextBlock
+        VerticalAlignment="Center"
+        FontFamily="Segoe UI Semibold"
+        FontSize="72.0"
+        Foreground="Orange"
+        Text="{Binding DisplayText}"
+        TextAlignment="Center" />
+
+</UserControl>
