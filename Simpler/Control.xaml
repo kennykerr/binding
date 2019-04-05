@@ -5,7 +5,7 @@
         FontFamily="Segoe UI Semibold"
         FontSize="72.0"
         Foreground="Orange"
-        Text="{Binding DisplayText}"
+        Text="{Binding SampleText}"
         TextAlignment="Center" />
 
 </UserControl>
