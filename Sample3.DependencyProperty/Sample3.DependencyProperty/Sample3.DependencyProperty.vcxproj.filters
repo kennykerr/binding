@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="App.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="ViewModel.cpp" />
+    <ClCompile Include="XamlTypeRegistry.cpp">
+      <Filter>winrt</Filter>
+    </ClCompile>
+    <ClCompile Include="MainPage.xaml.cpp" />
+    <ClCompile Include="MyControl.xaml.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="ViewModel.h" />
+    <ClInclude Include="XamlTypeRegistry.h">
+      <Filter>winrt</Filter>
+    </ClInclude>
+    <ClInclude Include="xaml_metadataprovider_app.h">
+      <Filter>winrt</Filter>
+    </ClInclude>
+    <ClInclude Include="xaml_bindable_type.h">
+      <Filter>winrt</Filter>
+    </ClInclude>
+    <ClInclude Include="MainPage.xaml.h" />
+    <ClInclude Include="MyControl.xaml.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\Wide310x150Logo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\SplashScreen.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Square44x44Logo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Square150x150Logo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\StoreLogo.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\LockScreenLogo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Sample3_DependencyProperty_TemporaryKey.pfx" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Assets">
+      <UniqueIdentifier>{0f7ca7f6-1458-4d8f-b8e3-bda36b63fd51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="winrt">
+      <UniqueIdentifier>{e419f55c-21e4-46c8-a311-9602dbf4fb56}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="MainPage.xaml" />
+    <Page Include="MyControl.xaml" />
+  </ItemGroup>
+</Project>
