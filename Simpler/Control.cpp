@@ -8,19 +8,12 @@ using namespace Windows::UI::Xaml::Controls;
 struct MyControl : xaml_user_control<MyControl>
 {
     hstring m_text{ L"0" };
-    event_token m_loaded;
 
     MyControl()
     {
         DataContext(*this);
-
-        m_loaded = Loaded([&](auto && ...)
-            {
-                Loaded(m_loaded);
-                UpdateAsync();
-            });
-
         InitializeComponent(L"ms-appx:///Control.xaml");
+        Loaded([&](auto && ...) { UpdateAsync(); });
     }
 
     static hstring GetRuntimeClassName()
@@ -28,28 +21,14 @@ struct MyControl : xaml_user_control<MyControl>
         return L"Sample.MyControl";
     }
 
-    static XamlTypeRegistry::MemberInformation GetMember(hstring const& name)
-    {
-        if (name == L"SampleText")
-        {
-            return {
-                name,
-                XamlTypeRegistry::GetType(L"String"),
-                [](IInspectable instance) { return winrt::box_value(instance.as<MyControl>()->m_text); },
-                nullptr };
-        }
-
-        return {};
-    }
-
     fire_and_forget UpdateAsync()
     {
-        using namespace std::literals;
         apartment_context context;
         int value{};
 
         while (true)
         {
+            using namespace std::literals;
             co_await 100ms;
             co_await context;
 
@@ -57,6 +36,20 @@ struct MyControl : xaml_user_control<MyControl>
             property_changed(L"SampleText");
         }
     }
+
+    static xaml_registry::member_info GetMember(hstring const& name)
+    {
+        if (name == L"SampleText")
+        {
+            return {
+                name,
+                xaml_registry::get(L"String"),
+                [](IInspectable instance) { return winrt::box_value(instance.as<MyControl>()->m_text); },
+                nullptr };
+        }
+
+        return {};
+    }
 };
 
-static bool register_type{ XamlTypeRegistry::RegisterType<MyControl>() };
+static bool register_type{ xaml_registry::add<MyControl>() };

@@ -1,12 +1,9 @@
 #include "pch.h"
 #include "xaml.h"
 
-using namespace std::literals;
 using namespace winrt;
 using namespace Windows::ApplicationModel::Activation;
-using namespace Windows::Foundation;
 using namespace Windows::UI::Xaml;
-using namespace Windows::UI::Xaml::Controls;
 
 struct MyPage : xaml_page<MyPage>
 {
