@@ -21,6 +21,21 @@ struct MyControl : xaml_user_control<MyControl>
         return L"Sample.MyControl";
     }
 
+    static xaml_member_info get_member(hstring const& name)
+    {
+        if (name == L"SampleText")
+        {
+            return
+            {
+                xaml_registry::get(L"String"),
+                [](IInspectable instance) { return winrt::box_value(instance.as<MyControl>()->m_text); },
+                nullptr
+            };
+        }
+
+        return {};
+    }
+
     fire_and_forget UpdateAsync()
     {
         apartment_context context;
@@ -36,20 +51,6 @@ struct MyControl : xaml_user_control<MyControl>
             property_changed(L"SampleText");
         }
     }
-
-    static xaml_registry::member_info GetMember(hstring const& name)
-    {
-        if (name == L"SampleText")
-        {
-            return {
-                name,
-                xaml_registry::get(L"String"),
-                [](IInspectable instance) { return winrt::box_value(instance.as<MyControl>()->m_text); },
-                nullptr };
-        }
-
-        return {};
-    }
 };
 
-static bool register_type{ xaml_registry::add<MyControl>() };
+static bool registration{ xaml_registry::add<MyControl>() };

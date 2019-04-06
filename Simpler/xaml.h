@@ -4,24 +4,23 @@
 
 namespace winrt
 {
+    struct xaml_member_info
+    {
+        Windows::UI::Xaml::Markup::IXamlType type;
+        std::function<Windows::Foundation::IInspectable(Windows::Foundation::IInspectable)> get;
+        std::function<void(Windows::Foundation::IInspectable, Windows::Foundation::IInspectable)> set;
+    };
+
+    struct xaml_type_info
+    {
+        hstring name;
+        std::function<Windows::Foundation::IInspectable()> create;
+        Windows::UI::Xaml::Markup::IXamlType base;
+        std::function<xaml_member_info(hstring const&)> member;
+    };
+
     struct xaml_registry
     {
-        struct member_info
-        {
-            hstring name;
-            Windows::UI::Xaml::Markup::IXamlType type;
-            std::function<Windows::Foundation::IInspectable(Windows::Foundation::IInspectable)> get;
-            std::function<void(Windows::Foundation::IInspectable, Windows::Foundation::IInspectable)> set;
-        };
-
-        struct type_info
-        {
-            hstring name;
-            std::function<Windows::Foundation::IInspectable()> create;
-            Windows::UI::Xaml::Markup::IXamlType base;
-            std::function<member_info(hstring const&)> member;
-        };
-
         template <typename T>
         static bool add()
         {
@@ -30,7 +29,7 @@ namespace winrt
                 T::GetRuntimeClassName(),
                 [] { return make<T>(); },
                 get(L"Object"),
-                [](hstring const& memberName) { return T::GetMember(memberName); }
+                [](hstring const& memberName) { return T::get_member(memberName); }
             });
         }
 
@@ -43,7 +42,7 @@ namespace winrt
 
         struct xaml_type : implements<xaml_type, Windows::UI::Xaml::Markup::IXamlType>
         {
-            xaml_type(type_info const& info) :
+            xaml_type(xaml_type_info const& info) :
                 m_info(info)
             {
             }
@@ -84,16 +83,17 @@ namespace winrt
 
             Windows::UI::Xaml::Markup::IXamlMember GetMember(hstring const& name) const
             {
-                struct member : implements<member, Windows::UI::Xaml::Markup::IXamlMember>
+                struct xaml_member : implements<xaml_member, Windows::UI::Xaml::Markup::IXamlMember>
                 {
-                    member(member_info&& info) :
+                    xaml_member(hstring const& name, xaml_member_info&& info) :
+                        m_name(name),
                         m_info(std::move(info))
                     {
                     }
 
                     hstring Name() const
                     {
-                        return m_info.name;
+                        return m_name;
                     }
 
                     Windows::UI::Xaml::Markup::IXamlType Type() const
@@ -122,10 +122,11 @@ namespace winrt
 
                 private:
 
-                    member_info m_info;
+                    hstring m_name;
+                    xaml_member_info m_info;
                 };
 
-                return make<member>(m_info.member(name));
+                return make<xaml_member>(name, m_info.member(name));
             }
 
             Windows::UI::Xaml::Markup::IXamlMember ContentProperty() const noexcept { return {}; }
@@ -142,11 +143,11 @@ namespace winrt
 
         private:
 
-            type_info m_info;
+            xaml_type_info m_info;
         };
 
         // TODO : can combine into a single collection
-        std::map<hstring, type_info> m_registration;
+        std::map<hstring, xaml_type_info> m_registration;
         std::map<hstring, Windows::UI::Xaml::Markup::IXamlType> m_typeCache;
 
         xaml_registry() = default;
@@ -157,7 +158,7 @@ namespace winrt
             return s_registry;
         }
 
-        bool add_type(type_info const& registration)
+        bool add_type(xaml_type_info const& registration)
         {
             auto typeName = registration.name;
             if (m_registration.find(typeName) == m_registration.end())
