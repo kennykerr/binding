@@ -4,11 +4,11 @@
     <ClCompile Include="App.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="Control.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Build</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -21,24 +21,24 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\Logo.scale-100.png">
-      <Filter>Package</Filter>
+      <Filter>Build</Filter>
     </Image>
     <Image Include="Assets\SmallLogo.scale-100.png">
-      <Filter>Package</Filter>
+      <Filter>Build</Filter>
     </Image>
     <Image Include="Assets\SplashScreen.scale-100.png">
-      <Filter>Package</Filter>
+      <Filter>Build</Filter>
     </Image>
     <Image Include="Assets\StoreLogo.scale-100.png">
-      <Filter>Package</Filter>
+      <Filter>Build</Filter>
     </Image>
     <Image Include="Assets\WideLogo.scale-100.png">
-      <Filter>Package</Filter>
+      <Filter>Build</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="XamlMarkup_TemporaryKey.pfx">
-      <Filter>Package</Filter>
+      <Filter>Build</Filter>
     </None>
     <None Include="MainPage.xaml">
       <Filter>Xaml</Filter>
@@ -49,19 +49,19 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Package">
-      <UniqueIdentifier>{b0ef550b-cd09-40fa-a5a2-d9421d7a2d4d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Xaml">
       <UniqueIdentifier>{a5e9c609-6f68-4b72-81ed-edd401fe4b59}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source">
       <UniqueIdentifier>{317714d0-6187-44bc-aa86-34ea95240d81}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Build">
+      <UniqueIdentifier>{b0ef550b-cd09-40fa-a5a2-d9421d7a2d4d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
-      <Filter>Package</Filter>
+      <Filter>Build</Filter>
     </AppxManifest>
   </ItemGroup>
 </Project>
