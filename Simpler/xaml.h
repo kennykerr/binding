@@ -17,6 +17,7 @@ namespace winrt
         std::function<Windows::Foundation::IInspectable()> create;
         Windows::UI::Xaml::Markup::IXamlType base;
         std::function<xaml_member_info(hstring const&)> member;
+        Windows::UI::Xaml::Markup::IXamlType type;
     };
 
     struct xaml_registry
@@ -24,13 +25,15 @@ namespace winrt
         template <typename T>
         static bool add()
         {
-            return registry().add_type(
+            registry().add_type(
             {
                 T::GetRuntimeClassName(),
                 [] { return make<T>(); },
                 get(L"Object"),
                 [](hstring const& memberName) { return T::get_member(memberName); }
             });
+
+            return true;
         }
 
         static Windows::UI::Xaml::Markup::IXamlType get(hstring const& typeName)
@@ -136,9 +139,9 @@ namespace winrt
             bool IsMarkupExtension() const noexcept { return {}; }
             Windows::UI::Xaml::Markup::IXamlType ItemType() const noexcept { return {}; }
             Windows::UI::Xaml::Markup::IXamlType KeyType() const noexcept { return {}; }
-            IInspectable CreateFromString(hstring const& /*value*/) const noexcept { return {}; }
-            void AddToVector(Windows::Foundation::IInspectable const& /*instance*/, Windows::Foundation::IInspectable const& /*value*/) const noexcept { }
-            void AddToMap(Windows::Foundation::IInspectable const& /*instance*/, Windows::Foundation::IInspectable const& /*key*/, Windows::Foundation::IInspectable const& /*value*/) const noexcept { }
+            IInspectable CreateFromString(hstring const&) const noexcept { return {}; }
+            void AddToVector(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept { }
+            void AddToMap(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept { }
             void RunInitializer() const noexcept { }
 
         private:
@@ -146,9 +149,7 @@ namespace winrt
             xaml_type_info m_info;
         };
 
-        // TODO : can combine into a single collection
-        std::map<hstring, xaml_type_info> m_registration;
-        std::map<hstring, Windows::UI::Xaml::Markup::IXamlType> m_typeCache;
+        std::map<hstring, xaml_type_info> m_registry;
 
         xaml_registry() = default;
 
@@ -158,35 +159,29 @@ namespace winrt
             return s_registry;
         }
 
-        bool add_type(xaml_type_info const& registration)
+        void add_type(xaml_type_info const& info)
         {
-            auto typeName = registration.name;
-            if (m_registration.find(typeName) == m_registration.end())
+            if (m_registry.find(info.name) == m_registry.end())
             {
-                m_registration[typeName] = registration;
-                return true;
+                m_registry[info.name] = info;
             }
-
-            return false;
         }
 
-        Windows::UI::Xaml::Markup::IXamlType get_type(hstring const& typeName)
+        Windows::UI::Xaml::Markup::IXamlType get_type(hstring const& name)
         {
-            auto typeEntry = m_typeCache.find(typeName);
-            if (typeEntry != m_typeCache.end())
+            auto info = m_registry.find(name);
+
+            if (info == m_registry.end())
             {
-                return typeEntry->second;
+                return nullptr;
             }
 
-            auto registryEntry = m_registration.find(typeName);
-            if (registryEntry != m_registration.end())
+            if (!info->second.type)
             {
-                auto xamlType = make<xaml_type>(registryEntry->second);
-                m_typeCache[typeName] = xamlType;
-                return xamlType;
+                info->second.type = make<xaml_type>(info->second);
             }
 
-            return nullptr;
+            return info->second.type;
         }
     };
 
