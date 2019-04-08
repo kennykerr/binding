@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "xaml.h"
 
+using namespace std::literals;
 using namespace winrt;
 using namespace Windows::Foundation;
 using namespace Windows::UI::Xaml::Controls;
@@ -11,7 +12,7 @@ struct MyControl : xaml_user_control<MyControl>
 
     MyControl() : base_type(L"ms-appx:///Control.xaml")
     {
-        Loaded([&](auto && ...) { UpdateAsync(); });
+        Loaded([&](auto&&...) { UpdateAsync(); });
     }
 
     static hstring GetRuntimeClassName()
@@ -35,14 +36,12 @@ struct MyControl : xaml_user_control<MyControl>
 
     fire_and_forget UpdateAsync()
     {
-        apartment_context context;
         int value{};
 
         while (true)
         {
-            using namespace std::literals;
             co_await 100ms;
-            co_await context;
+            co_await resume_foreground(Dispatcher());
 
             m_text = std::to_wstring(++value);
             property_changed(L"SampleText");
