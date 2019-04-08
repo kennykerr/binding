@@ -9,10 +9,8 @@ struct MyControl : xaml_user_control<MyControl>
 {
     hstring m_text{ L"0" };
 
-    MyControl()
+    MyControl() : base_type(L"ms-appx:///Control.xaml")
     {
-        DataContext(*this);
-        InitializeComponent(L"ms-appx:///Control.xaml");
         Loaded([&](auto && ...) { UpdateAsync(); });
     }
 

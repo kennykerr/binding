@@ -7,9 +7,8 @@ using namespace Windows::UI::Xaml;
 
 struct MyPage : xaml_page<MyPage>
 {
-    MyPage()
+    MyPage() : base_type(L"ms-appx:///MainPage.xaml")
     {
-        InitializeComponent(L"ms-appx:///MainPage.xaml");
     }
 };
 

@@ -224,8 +224,11 @@ namespace winrt
 
     protected:
 
-        void InitializeComponent(hstring const& uri) const
+        using base_type = xaml_type<D, B, I...>;
+
+        xaml_type(hstring const& uri)
         {
+            DataContext(*this);
             Windows::UI::Xaml::Application::LoadComponent(*this, Windows::Foundation::Uri(uri));
         }
 
