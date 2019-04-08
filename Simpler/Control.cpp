@@ -20,6 +20,11 @@ struct MyControl : xaml_user_control<MyControl>
         return L"Sample.MyControl";
     }
 
+    auto bind(hstring const& name) const
+    {
+
+    }
+
     static xaml_member_info get_member(hstring const& name)
     {
         if (name == L"SampleText")

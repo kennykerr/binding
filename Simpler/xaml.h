@@ -4,17 +4,19 @@
 
 namespace winrt
 {
+    using inspectable = Windows::Foundation::IInspectable;
+
     struct xaml_member_info
     {
         Windows::UI::Xaml::Markup::IXamlType type;
-        std::function<Windows::Foundation::IInspectable(Windows::Foundation::IInspectable)> get;
-        std::function<void(Windows::Foundation::IInspectable, Windows::Foundation::IInspectable)> set;
+        std::function<inspectable(inspectable)> get;
+        std::function<void(inspectable, inspectable)> set;
     };
 
     struct xaml_type_info
     {
         hstring name;
-        std::function<Windows::Foundation::IInspectable()> create;
+        std::function<inspectable()> create;
         Windows::UI::Xaml::Markup::IXamlType base;
         std::function<xaml_member_info(hstring const&)> member;
         Windows::UI::Xaml::Markup::IXamlType type;
@@ -38,12 +40,12 @@ namespace winrt
             return m_info.type;
         }
 
-        Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const& instance) const
+        inspectable GetValue(inspectable const& instance) const
         {
             return m_info.get(instance);
         }
 
-        void SetValue(Windows::Foundation::IInspectable const& instance, Windows::Foundation::IInspectable const& value) const
+        void SetValue(inspectable const& instance, inspectable const& value) const
         {
             m_info.set(instance, value);
         }
@@ -117,8 +119,8 @@ namespace winrt
         Windows::UI::Xaml::Markup::IXamlType ItemType() const noexcept { return {}; }
         Windows::UI::Xaml::Markup::IXamlType KeyType() const noexcept { return {}; }
         IInspectable CreateFromString(hstring const&) const noexcept { return {}; }
-        void AddToVector(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept { }
-        void AddToMap(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept { }
+        void AddToVector(inspectable const&, inspectable const&) const noexcept { }
+        void AddToMap(inspectable const&, inspectable const&, inspectable const&) const noexcept { }
         void RunInitializer() const noexcept { }
 
     private:
