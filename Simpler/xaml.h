@@ -6,6 +6,12 @@ namespace winrt
 {
     using inspectable = Windows::Foundation::IInspectable;
 
+    template <typename T, typename Allocator = std::allocator<T>>
+    Windows::Foundation::Collections::IObservableVector<T> observable_vector(std::vector<T, Allocator> && values = {})
+    {
+        return single_threaded_observable_vector<T, Allocator>(std::forward<std::vector<T, Allocator>>(values));
+    }
+
     struct xaml_member
     {
         xaml_member() noexcept {}

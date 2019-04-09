@@ -17,5 +17,7 @@
             Foreground="Orange"
             Text="{Binding Text}"
             TextAlignment="Center" />
+        <ListView
+            ItemsSource="{Binding List}" />
     </StackPanel>
 </UserControl>
