@@ -14,9 +14,10 @@
             Grid.Row="1"
             FontSize="48"
             Text="{Binding Text, Mode=TwoWay}" />
-        <TextBlock
+        <TextBox
             Grid.Row="2"
             FontSize="48"
+            IsReadOnly="true"
             Text="{Binding Text}" />
         <ScrollViewer Grid.Row="3">
             <ListView ItemsSource="{Binding List}">

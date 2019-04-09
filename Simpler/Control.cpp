@@ -3,7 +3,6 @@
 
 using namespace std::literals;
 using namespace winrt;
-using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::UI::Xaml::Controls;
 
@@ -48,7 +47,7 @@ struct MyControl : xaml_user_control<MyControl>
             ++m_counter;
             property_changed(L"Counter");
 
-            m_list.InsertAt(0, box_value(m_counter));
+            m_list.Append(box_value(m_counter));
         }
     }
 
