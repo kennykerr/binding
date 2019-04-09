@@ -1,11 +1,21 @@
 ﻿<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-
-    <TextBlock
-        VerticalAlignment="Center"
-        FontFamily="Segoe UI Semibold"
-        FontSize="72.0"
-        Foreground="Orange"
-        Text="{Binding SampleText}"
-        TextAlignment="Center" />
-
+    <StackPanel VerticalAlignment="Center">
+        <TextBlock
+            FontFamily="Segoe UI Semibold"
+            FontSize="48.0"
+            Foreground="Orange"
+            Text="{Binding Counter}"
+            TextAlignment="Center" />
+        <TextBox
+            FontFamily="Segoe UI Semibold"
+            FontSize="48.0"
+            Text="{Binding Text, Mode=TwoWay}"
+            TextAlignment="Left" />
+        <TextBlock
+            FontFamily="Segoe UI Semibold"
+            FontSize="48.0"
+            Foreground="Orange"
+            Text="{Binding Text}"
+            TextAlignment="Center" />
+    </StackPanel>
 </UserControl>

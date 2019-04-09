@@ -196,7 +196,9 @@ namespace winrt
 
             void SetValue(inspectable const& instance, inspectable const& value) const
             {
-                return get_self<D>(instance)->bind(m_name).put(value);
+                auto self = get_self<D>(instance);
+                self->bind(m_name).put(value);
+                self->property_changed(m_name);
             }
 
             bool IsReadOnly() const

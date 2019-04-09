@@ -8,7 +8,8 @@ using namespace Windows::UI::Xaml::Controls;
 
 struct MyControl : xaml_user_control<MyControl>
 {
-    hstring m_text{ L"0" };
+    int m_counter{};
+    hstring m_text;
 
     MyControl() : base_type(L"ms-appx:///Control.xaml")
     {
@@ -22,7 +23,12 @@ struct MyControl : xaml_user_control<MyControl>
 
     xaml_member bind(hstring const& name)
     {
-        if (name == L"SampleText")
+        if (name == L"Counter")
+        {
+            return m_counter;
+        }
+
+        if (name == L"Text")
         {
             return m_text;
         }
@@ -32,15 +38,13 @@ struct MyControl : xaml_user_control<MyControl>
 
     fire_and_forget UpdateAsync()
     {
-        int value{};
-
         while (true)
         {
             co_await 100ms;
             co_await resume_foreground(Dispatcher());
 
-            m_text = std::to_wstring(++value);
-            property_changed(L"SampleText");
+            ++m_counter;
+            property_changed(L"Counter");
         }
     }
 };
