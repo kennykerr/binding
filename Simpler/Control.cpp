@@ -31,7 +31,6 @@ struct MyControl : xaml_user_control<MyControl>
         {
             return
             {
-                xaml_registry::get(L"String"),
                 [](auto&& instance) { return box_value(instance.as<MyControl>()->m_text); }
             };
         }

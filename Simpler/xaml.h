@@ -8,16 +8,13 @@ namespace winrt
 
     struct xaml_member_info
     {
-        Windows::UI::Xaml::Markup::IXamlType type;
         std::function<inspectable(inspectable)> get;
         std::function<void(inspectable, inspectable)> set;
     };
 
     struct xaml_type_info
     {
-        hstring name;
         std::function<inspectable()> create;
-        Windows::UI::Xaml::Markup::IXamlType base;
         std::function<xaml_member_info(hstring const&)> member;
         Windows::UI::Xaml::Markup::IXamlType type;
     };
@@ -37,7 +34,7 @@ namespace winrt
 
         Windows::UI::Xaml::Markup::IXamlType Type() const
         {
-            return m_info.type;
+            return nullptr;
         }
 
         inspectable GetValue(inspectable const& instance) const
@@ -52,7 +49,7 @@ namespace winrt
 
         bool IsReadOnly() const
         {
-            return m_info.set == nullptr;
+            return false;
         }
 
         bool IsAttachable() const noexcept { return {}; }
@@ -67,14 +64,15 @@ namespace winrt
 
     struct xaml_type_instance : implements<xaml_type_instance, Windows::UI::Xaml::Markup::IXamlType>
     {
-        xaml_type_instance(xaml_type_info const& info) :
+        xaml_type_instance(hstring const& name, xaml_type_info const& info) :
+            m_name(name),
             m_info(info)
         {
         }
 
         hstring FullName() const
         {
-            return m_info.name;
+            return m_name;
         }
 
         auto ActivateInstance() const
@@ -84,21 +82,17 @@ namespace winrt
 
         auto BaseType() const
         {
-            return m_info.base;
+            return nullptr;
         }
 
         bool IsConstructible() const
         {
-            return m_info.create != nullptr;
+            return true;
         }
 
         Windows::UI::Xaml::Interop::TypeName UnderlyingType() const
         {
-            return
-            {
-                m_info.name,
-                m_info.base ? Windows::UI::Xaml::Interop::TypeKind::Custom : Windows::UI::Xaml::Interop::TypeKind::Primitive
-            };
+            return {};
         }
 
         bool IsBindable() const
@@ -125,6 +119,7 @@ namespace winrt
 
     private:
 
+        hstring m_name;
         xaml_type_info m_info;
     };
 
@@ -133,20 +128,18 @@ namespace winrt
         template <typename T>
         static bool add()
         {
-            registry().add_type(
+            registry().add_type(T::GetRuntimeClassName(),
             {
-                T::GetRuntimeClassName(),
                 [] { return make<T>(); },
-                get(L"Object"),
                 [](hstring const& name) { return T::get_member(name); }
             });
 
             return true;
         }
 
-        static Windows::UI::Xaml::Markup::IXamlType get(hstring const& typeName)
+        static Windows::UI::Xaml::Markup::IXamlType get(hstring const& name)
         {
-            return registry().get_type(typeName);
+            return registry().get_type(name);
         }
 
     private:
@@ -161,11 +154,11 @@ namespace winrt
             return s_registry;
         }
 
-        void add_type(xaml_type_info const& info)
+        void add_type(hstring const& name, xaml_type_info const& info)
         {
-            if (m_registry.find(info.name) == m_registry.end())
+            if (m_registry.find(name) == m_registry.end())
             {
-                m_registry[info.name] = info;
+                m_registry[name] = info;
             }
         }
 
@@ -180,7 +173,7 @@ namespace winrt
 
             if (!info->second.type)
             {
-                info->second.type = make<xaml_type_instance>(info->second);
+                info->second.type = make<xaml_type_instance>(name, info->second);
             }
 
             return info->second.type;
