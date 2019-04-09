@@ -66,11 +66,6 @@ namespace winrt
         std::unique_ptr<accessor_abi> m_accessor;
     };
 
-    struct xaml_type_info
-    {
-        std::function<Windows::UI::Xaml::Markup::IXamlType()> get;
-    };
-
     struct xaml_registry
     {
         template <typename T>
@@ -143,7 +138,7 @@ namespace winrt
     };
 
     template <typename D, template <typename...> typename B, typename... I>
-    struct xaml_type : B<D, Windows::UI::Xaml::Data::INotifyPropertyChanged, I...>
+    struct xaml_type : B<D, inspectable, Windows::UI::Xaml::Data::INotifyPropertyChanged, I...>
     {
         event_token PropertyChanged(Windows::UI::Xaml::Data::PropertyChangedEventHandler const& handler)
         {
@@ -196,16 +191,12 @@ namespace winrt
 
             inspectable GetValue(inspectable const& instance) const
             {
-                auto strong = get_self<D>(instance.as<Windows::UI::Xaml::Data::INotifyPropertyChanged>());
-
-                return strong->bind(m_name).get();
+                return get_self<D>(instance)->bind(m_name).get();
             }
 
             void SetValue(inspectable const& instance, inspectable const& value) const
             {
-                auto strong = get_self<D>(instance.as<Windows::UI::Xaml::Data::INotifyPropertyChanged>());
-
-                return strong->bind(m_name).put(value);
+                return get_self<D>(instance)->bind(m_name).put(value);
             }
 
             bool IsReadOnly() const
