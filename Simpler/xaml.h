@@ -76,10 +76,11 @@ namespace winrt
         template <typename T>
         static bool add()
         {
-            registry().add_type(T::GetRuntimeClassName(),
-            {
-                [] { return T::get_type(); },
-            });
+            registry().add_type(T::GetRuntimeClassName(), []
+                {
+                    static auto type = T::get_type();
+                    return type;
+                });
 
             return true;
         }
@@ -91,7 +92,7 @@ namespace winrt
 
     private:
 
-        std::map<hstring, xaml_type_info> m_registry;
+        std::map<hstring, std::function<Windows::UI::Xaml::Markup::IXamlType()>> m_registry;
 
         xaml_registry() = default;
 
@@ -101,11 +102,11 @@ namespace winrt
             return s_registry;
         }
 
-        void add_type(hstring const& name, xaml_type_info const& info)
+        void add_type(hstring const& name, std::function<Windows::UI::Xaml::Markup::IXamlType()> const& get)
         {
             if (m_registry.find(name) == m_registry.end())
             {
-                m_registry[name] = info;
+                m_registry[name] = get;
             }
         }
 
@@ -118,7 +119,7 @@ namespace winrt
                 return nullptr;
             }
 
-            return info->second.get();
+            return info->second();
         }
     };
 
