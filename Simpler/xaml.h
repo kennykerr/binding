@@ -111,16 +111,16 @@ namespace winrt
             }
         }
 
-        Windows::UI::Xaml::Markup::IXamlType get_type(hstring const& name)
+        Windows::UI::Xaml::Markup::IXamlType get_type(hstring const& name) const
         {
             auto info = m_registry.find(name);
 
-            if (info == m_registry.end())
+            if (info != m_registry.end())
             {
-                return nullptr;
+                return info->second();
             }
 
-            return info->second();
+            return {};
         }
     };
 
