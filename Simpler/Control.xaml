@@ -1,23 +1,31 @@
 ﻿<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-    <StackPanel VerticalAlignment="Center">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
         <TextBlock
-            FontFamily="Segoe UI Semibold"
-            FontSize="48.0"
-            Foreground="Orange"
-            Text="{Binding Counter}"
-            TextAlignment="Center" />
+            Grid.Row="0"
+            FontSize="48"
+            Text="{Binding Counter}" />
         <TextBox
-            FontFamily="Segoe UI Semibold"
-            FontSize="48.0"
-            Text="{Binding Text, Mode=TwoWay}"
-            TextAlignment="Left" />
+            Grid.Row="1"
+            FontSize="48"
+            Text="{Binding Text, Mode=TwoWay}" />
         <TextBlock
-            FontFamily="Segoe UI Semibold"
-            FontSize="48.0"
-            Foreground="Orange"
-            Text="{Binding Text}"
-            TextAlignment="Center" />
-        <ListView
-            ItemsSource="{Binding List}" />
-    </StackPanel>
+            Grid.Row="2"
+            FontSize="48"
+            Text="{Binding Text}" />
+        <ScrollViewer Grid.Row="3">
+            <ListView ItemsSource="{Binding List}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" FontSize="48" />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

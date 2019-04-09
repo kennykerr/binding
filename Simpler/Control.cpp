@@ -13,16 +13,6 @@ struct MyControl : xaml_user_control<MyControl>
     hstring m_text;
     IObservableVector<inspectable> m_list{ observable_vector<inspectable>() };
 
-    MyControl() : base_type(L"ms-appx:///Control.xaml")
-    {
-        Loaded([&](auto&&...) { UpdateAsync(); });
-    }
-
-    static hstring GetRuntimeClassName()
-    {
-        return L"Sample.MyControl";
-    }
-
     xaml_member bind(hstring const& name)
     {
         if (name == L"Counter")
@@ -43,18 +33,28 @@ struct MyControl : xaml_user_control<MyControl>
         return {};
     }
 
+    MyControl() : base_type(L"ms-appx:///Control.xaml")
+    {
+        Loaded([&](auto && ...) { UpdateAsync(); });
+    }
+
     fire_and_forget UpdateAsync()
     {
         while (true)
         {
-            co_await 1s;
+            co_await 500ms;
             co_await resume_foreground(Dispatcher());
 
             ++m_counter;
             property_changed(L"Counter");
 
-            m_list.Append(box_value(m_counter));
+            m_list.InsertAt(0, box_value(m_counter));
         }
+    }
+
+    static hstring GetRuntimeClassName()
+    {
+        return L"Sample.MyControl";
     }
 };
 
