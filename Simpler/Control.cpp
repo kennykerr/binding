@@ -20,19 +20,11 @@ struct MyControl : xaml_user_control<MyControl>
         return L"Sample.MyControl";
     }
 
-    auto bind(hstring const& name) const
-    {
-
-    }
-
-    static xaml_member_info get_member(hstring const& name)
+    xaml_member bind(hstring const& name)
     {
         if (name == L"SampleText")
         {
-            return
-            {
-                [](auto&& instance) { return box_value(instance.as<MyControl>()->m_text); }
-            };
+            return m_text;
         }
 
         return {};

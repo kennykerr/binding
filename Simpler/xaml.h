@@ -6,121 +6,69 @@ namespace winrt
 {
     using inspectable = Windows::Foundation::IInspectable;
 
-    struct xaml_member_info
+    struct xaml_member
     {
-        std::function<inspectable(inspectable)> get;
-        std::function<void(inspectable, inspectable)> set;
+        xaml_member() noexcept {}
+
+        template <typename T>
+        xaml_member(T& value) : m_accessor(new accessor<T>(value))
+        {
+        }
+
+        inspectable get() const
+        {
+            if (m_accessor)
+            {
+                return m_accessor->get();
+            }
+
+            return {};
+        }
+
+        void put(inspectable const& value) const
+        {
+            if (m_accessor)
+            {
+                m_accessor->put(value);
+            }
+        }
+
+    private:
+
+        struct accessor_abi
+        {
+            virtual inspectable get() = 0;
+            virtual void put(inspectable const&) = 0;
+        };
+
+        template <typename T>
+        struct accessor final : accessor_abi
+        {
+            accessor(T& value) : m_value(value)
+            {
+            }
+
+            inspectable get() final
+            {
+                return box_value(m_value);
+            }
+
+            void put(inspectable const& value) final
+            {
+                m_value = unbox_value<T>(value);
+            }
+
+        private:
+
+            T& m_value;
+        };
+
+        std::unique_ptr<accessor_abi> m_accessor;
     };
 
     struct xaml_type_info
     {
-        std::function<inspectable()> create;
-        std::function<xaml_member_info(hstring const&)> member;
-        Windows::UI::Xaml::Markup::IXamlType type;
-    };
-
-    struct xaml_member_instance : implements<xaml_member_instance, Windows::UI::Xaml::Markup::IXamlMember>
-    {
-        xaml_member_instance(hstring const& name, xaml_member_info&& info) :
-            m_name(name),
-            m_info(std::move(info))
-        {
-        }
-
-        hstring Name() const
-        {
-            return m_name;
-        }
-
-        Windows::UI::Xaml::Markup::IXamlType Type() const
-        {
-            return nullptr;
-        }
-
-        inspectable GetValue(inspectable const& instance) const
-        {
-            return m_info.get(instance);
-        }
-
-        void SetValue(inspectable const& instance, inspectable const& value) const
-        {
-            m_info.set(instance, value);
-        }
-
-        bool IsReadOnly() const
-        {
-            return false;
-        }
-
-        bool IsAttachable() const noexcept { return {}; }
-        bool IsDependencyProperty() const noexcept { return {}; }
-        Windows::UI::Xaml::Markup::IXamlType TargetType() const noexcept { return {}; }
-
-    private:
-
-        hstring m_name;
-        xaml_member_info m_info;
-    };
-
-    struct xaml_type_instance : implements<xaml_type_instance, Windows::UI::Xaml::Markup::IXamlType>
-    {
-        xaml_type_instance(hstring const& name, xaml_type_info const& info) :
-            m_name(name),
-            m_info(info)
-        {
-        }
-
-        hstring FullName() const
-        {
-            return m_name;
-        }
-
-        auto ActivateInstance() const
-        {
-            return m_info.create();
-        }
-
-        auto BaseType() const
-        {
-            return nullptr;
-        }
-
-        bool IsConstructible() const
-        {
-            return true;
-        }
-
-        Windows::UI::Xaml::Interop::TypeName UnderlyingType() const
-        {
-            return {};
-        }
-
-        bool IsBindable() const
-        {
-            return true;
-        }
-
-        Windows::UI::Xaml::Markup::IXamlMember GetMember(hstring const& name) const
-        {
-            return make<xaml_member_instance>(name, m_info.member(name));
-        }
-
-        Windows::UI::Xaml::Markup::IXamlMember ContentProperty() const noexcept { return {}; }
-        bool IsArray() const noexcept { return {}; }
-        bool IsCollection() const noexcept { return {}; }
-        bool IsDictionary() const noexcept { return {}; }
-        bool IsMarkupExtension() const noexcept { return {}; }
-        Windows::UI::Xaml::Markup::IXamlType ItemType() const noexcept { return {}; }
-        Windows::UI::Xaml::Markup::IXamlType KeyType() const noexcept { return {}; }
-        IInspectable CreateFromString(hstring const&) const noexcept { return {}; }
-        void AddToVector(inspectable const&, inspectable const&) const noexcept { }
-        void AddToMap(inspectable const&, inspectable const&, inspectable const&) const noexcept { }
-        void RunInitializer() const noexcept { }
-
-    private:
-
-        hstring m_name;
-        xaml_type_info m_info;
+        std::function<Windows::UI::Xaml::Markup::IXamlType()> get;
     };
 
     struct xaml_registry
@@ -130,8 +78,7 @@ namespace winrt
         {
             registry().add_type(T::GetRuntimeClassName(),
             {
-                [] { return make<T>(); },
-                [](hstring const& name) { return T::get_member(name); }
+                [] { return T::get_type(); },
             });
 
             return true;
@@ -171,12 +118,7 @@ namespace winrt
                 return nullptr;
             }
 
-            if (!info->second.type)
-            {
-                info->second.type = make<xaml_type_instance>(name, info->second);
-            }
-
-            return info->second.type;
+            return info->second.get();
         }
     };
 
@@ -212,6 +154,11 @@ namespace winrt
             m_changed.remove(token);
         }
 
+        static Windows::UI::Xaml::Markup::IXamlType get_type()
+        {
+            return make<xaml_type_instance>();
+        }
+
     protected:
 
         using base_type = xaml_type<D, B, I...>;
@@ -228,6 +175,101 @@ namespace winrt
         }
 
     private:
+
+        struct xaml_member_instance : implements<xaml_member_instance, Windows::UI::Xaml::Markup::IXamlMember>
+        {
+            xaml_member_instance(hstring const& name) :
+                m_name(name)
+            {
+            }
+
+            hstring Name() const
+            {
+                return m_name;
+            }
+
+            Windows::UI::Xaml::Markup::IXamlType Type() const
+            {
+                return nullptr;
+            }
+
+            inspectable GetValue(inspectable const& instance) const
+            {
+                auto strong = get_self<D>(instance.as<Windows::UI::Xaml::Data::INotifyPropertyChanged>());
+
+                return strong->bind(m_name).get();
+            }
+
+            void SetValue(inspectable const& instance, inspectable const& value) const
+            {
+                auto strong = get_self<D>(instance.as<Windows::UI::Xaml::Data::INotifyPropertyChanged>());
+
+                return strong->bind(m_name).put(value);
+            }
+
+            bool IsReadOnly() const
+            {
+                return false;
+            }
+
+            bool IsAttachable() const noexcept { return {}; }
+            bool IsDependencyProperty() const noexcept { return {}; }
+            Windows::UI::Xaml::Markup::IXamlType TargetType() const noexcept { return {}; }
+
+        private:
+
+            hstring m_name;
+        };
+
+        struct xaml_type_instance : implements<xaml_type_instance, Windows::UI::Xaml::Markup::IXamlType>
+        {
+            hstring FullName() const
+            {
+                return D::GetRuntimeClassName();
+            }
+
+            auto ActivateInstance() const
+            {
+                return make<D>();
+            }
+
+            auto BaseType() const
+            {
+                return nullptr;
+            }
+
+            bool IsConstructible() const
+            {
+                return true;
+            }
+
+            Windows::UI::Xaml::Interop::TypeName UnderlyingType() const
+            {
+                return {};
+            }
+
+            bool IsBindable() const
+            {
+                return true;
+            }
+
+            Windows::UI::Xaml::Markup::IXamlMember GetMember(hstring const& name) const
+            {
+                return make<xaml_member_instance>(name);
+            }
+
+            Windows::UI::Xaml::Markup::IXamlMember ContentProperty() const noexcept { return {}; }
+            bool IsArray() const noexcept { return {}; }
+            bool IsCollection() const noexcept { return {}; }
+            bool IsDictionary() const noexcept { return {}; }
+            bool IsMarkupExtension() const noexcept { return {}; }
+            Windows::UI::Xaml::Markup::IXamlType ItemType() const noexcept { return {}; }
+            Windows::UI::Xaml::Markup::IXamlType KeyType() const noexcept { return {}; }
+            inspectable CreateFromString(hstring const&) const noexcept { return {}; }
+            void AddToVector(inspectable const&, inspectable const&) const noexcept { }
+            void AddToMap(inspectable const&, inspectable const&, inspectable const&) const noexcept { }
+            void RunInitializer() const noexcept { }
+        };
 
         event<Windows::UI::Xaml::Data::PropertyChangedEventHandler> m_changed;
     };
