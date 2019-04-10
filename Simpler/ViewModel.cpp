@@ -9,7 +9,12 @@ using namespace Windows::UI::Xaml::Controls;
 
 struct MyViewModelObject : implements<MyViewModelObject, inspectable>
 {
-	hstring m_text{ L"View Model Object" };
+    hstring m_text{ L"View Model Object" };
+
+    static hstring GetRuntimeClassName()
+    {
+    	return L"Sample.MyViewModelObject";
+    }
 };
 
 namespace winrt
@@ -19,7 +24,7 @@ namespace winrt
 	{
 		static hstring GetRuntimeClassName()
 		{
-			return L"Sample.MyViewModelObject";
+            return MyViewModelObject::GetRuntimeClassName();
 		}
 
 		static xaml_member bind(MyViewModelObject* self, hstring const& name)
@@ -44,14 +49,18 @@ namespace winrt
 	template<typename T>
 	struct xaml_wrapper : implements<xaml_wrapper<T>, inspectable>, T
 	{
-	};
+        static hstring GetRuntimeClassName()
+        {
+            return L"Sample.MyViewModelStruct";
+        }
+    };
 
 	template<>
-	struct xaml_traits<xaml_wrapper<MyViewModelStruct>> : xaml_non_observable_type<xaml_wrapper<MyViewModelStruct>>
+	struct xaml_traits<MyViewModelStruct>
 	{
 		static hstring GetRuntimeClassName()
 		{
-			return L"Sample.MyViewModelStruct";
+            return xaml_wrapper<MyViewModelStruct>::GetRuntimeClassName();
 		}
 
 		static xaml_member bind(xaml_wrapper<MyViewModelStruct>* self, hstring const& name)

@@ -9,7 +9,7 @@ using namespace Windows::UI::Xaml::Controls;
 struct MyControl : xaml_user_control<MyControl>
 {
     int m_counter{};
-    hstring m_text;
+    hstring m_text{L"Text"};
     IObservableVector<inspectable> m_list{ observable_vector<inspectable>() };
 
     xaml_member bind(hstring const& name)
