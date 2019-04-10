@@ -6,7 +6,7 @@ using namespace winrt;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::UI::Xaml::Controls;
 
-struct MyControl : xaml_user_control<MyControl>
+struct SampleControl : xaml_user_control<SampleControl>
 {
     int m_counter{};
     hstring m_text;
@@ -32,7 +32,7 @@ struct MyControl : xaml_user_control<MyControl>
         return {};
     }
 
-    MyControl() : base_type(L"ms-appx:///Control.xaml")
+    SampleControl() : base_type(L"ms-appx:///Control.xaml")
     {
         Loaded([&](auto && ...) { UpdateAsync(); });
     }
@@ -53,6 +53,6 @@ struct MyControl : xaml_user_control<MyControl>
 
     static hstring type_name()
     {
-        return L"Sample.MyControl";
+        return L"Sample.Control";
     }
 };

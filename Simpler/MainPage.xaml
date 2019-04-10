@@ -1,5 +1,3 @@
 ﻿<Page xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:local="using:Sample">
-
-    <local:MyControl />
-
+    <local:Control />
 </Page>
