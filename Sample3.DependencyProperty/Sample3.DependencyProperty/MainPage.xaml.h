@@ -1,0 +1,12 @@
+#pragma once
+
+#include "xaml_bindable_type.h"
+
+namespace Sample3::DependencyProperty
+{
+    struct MainPage :
+        winrt::xaml_bindable_type<MainPage, winrt::Windows::UI::Xaml::Controls::PageT>
+    {
+        MainPage();
+    };
+}
