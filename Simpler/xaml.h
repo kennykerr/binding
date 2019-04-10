@@ -172,6 +172,11 @@ namespace winrt
             return make<xaml_type_instance>();
         }
 
+        static hstring GetRuntimeClassName()
+        {
+            return D::type_name();
+        }
+
     protected:
 
         using base_type = xaml_type<D, R, B, I...>;
@@ -282,6 +287,11 @@ namespace winrt
             void AddToMap(inspectable const&, inspectable const&, inspectable const&) const noexcept { }
             void RunInitializer() const noexcept { }
         };
+
+        static hstring type_name()
+        {
+            return {};
+        }
 
         event<Windows::UI::Xaml::Data::PropertyChangedEventHandler> m_changed;
     };

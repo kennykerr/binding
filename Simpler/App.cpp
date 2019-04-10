@@ -5,9 +5,9 @@ using namespace winrt;
 using namespace Windows::ApplicationModel::Activation;
 using namespace Windows::UI::Xaml;
 
-struct MyPage : xaml_page<MyPage>
+struct MainPage : xaml_page<MainPage>
 {
-    MyPage() : base_type(L"ms-appx:///MainPage.xaml")
+    MainPage() : base_type(L"ms-appx:///MainPage.xaml")
     {
     }
 };
@@ -17,7 +17,7 @@ struct App : xaml_app<App>
     void OnLaunched(LaunchActivatedEventArgs const&)
     {
         auto window = Window::Current();
-        window.Content(make<MyPage>());
+        window.Content(make<MainPage>());
         window.Activate();
     }
 };

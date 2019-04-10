@@ -51,7 +51,7 @@ struct MyControl : xaml_user_control<MyControl>
         }
     }
 
-    static hstring GetRuntimeClassName()
+    static hstring type_name()
     {
         return L"Sample.MyControl";
     }
