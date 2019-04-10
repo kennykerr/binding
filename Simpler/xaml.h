@@ -144,7 +144,7 @@ namespace winrt
     };
 
     template <typename D, template <typename...> typename B, typename... I>
-    struct xaml_type : B<D, inspectable, Windows::UI::Xaml::Data::INotifyPropertyChanged, I...>
+    struct xaml_type : B<D, Windows::UI::Xaml::Data::INotifyPropertyChanged, I...>
     {
         event_token PropertyChanged(Windows::UI::Xaml::Data::PropertyChangedEventHandler const& handler)
         {
@@ -197,12 +197,13 @@ namespace winrt
 
             inspectable GetValue(inspectable const& instance) const
             {
-                return get_self<D>(instance)->bind(m_name).get();
+                auto self = get_self<D>(instance.as< Windows::UI::Xaml::Data::INotifyPropertyChanged>());
+                return self->bind(m_name).get();
             }
 
             void SetValue(inspectable const& instance, inspectable const& value) const
             {
-                auto self = get_self<D>(instance);
+                auto self = get_self<D>(instance.as< Windows::UI::Xaml::Data::INotifyPropertyChanged>());
                 self->bind(m_name).put(value);
                 self->property_changed(m_name);
             }
