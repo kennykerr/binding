@@ -12,6 +12,11 @@ struct SampleControl : xaml_user_control<SampleControl>
     hstring m_text;
     IObservableVector<boxed_value> m_list{ observable_vector<boxed_value>() };
 
+    static hstring type_name()
+    {
+        return L"Sample.Control";
+    }
+
     xaml_member bind(hstring const& name)
     {
         if (name == L"Counter")
@@ -49,10 +54,5 @@ struct SampleControl : xaml_user_control<SampleControl>
 
             m_list.Append(m_counter);
         }
-    }
-
-    static hstring type_name()
-    {
-        return L"Sample.Control";
     }
 };
