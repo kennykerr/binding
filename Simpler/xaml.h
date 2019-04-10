@@ -183,7 +183,6 @@ namespace winrt
 
         xaml_type(hstring const& uri)
         {
-            DataContext(*this);
             Windows::UI::Xaml::Application::LoadComponent(*this, Windows::Foundation::Uri(uri));
         }
 

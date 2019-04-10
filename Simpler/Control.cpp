@@ -39,6 +39,7 @@ struct SampleControl : xaml_user_control<SampleControl>
 
     SampleControl() : base_type(L"ms-appx:///Control.xaml")
     {
+        DataContext(*this);
         Loaded([&](auto && ...) { UpdateAsync(); });
     }
 
