@@ -10,7 +10,7 @@ struct MyControl : xaml_user_control<MyControl>
 {
     int m_counter{};
     hstring m_text;
-    IObservableVector<inspectable> m_list{ observable_vector<inspectable>() };
+    IObservableVector<boxed_value> m_list{ observable_vector<boxed_value>() };
 
     xaml_member bind(hstring const& name)
     {
@@ -47,7 +47,7 @@ struct MyControl : xaml_user_control<MyControl>
             ++m_counter;
             property_changed(L"Counter");
 
-            m_list.Append(box_value(m_counter));
+            m_list.Append(m_counter);
         }
     }
 
@@ -56,5 +56,3 @@ struct MyControl : xaml_user_control<MyControl>
         return L"Sample.MyControl";
     }
 };
-
-static bool registration{ xaml_registry::add<MyControl>() };

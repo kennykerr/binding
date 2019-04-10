@@ -124,6 +124,17 @@ namespace winrt
         }
     };
 
+    template <typename D, bool Register = true>
+    struct xaml_registration
+    {
+        static inline bool registered{ xaml_registry::add<D>() };
+    };
+
+    template <typename D>
+    struct xaml_registration<D, false>
+    {
+    };
+
     template <typename D, typename... I>
     struct xaml_app : Windows::UI::Xaml::ApplicationT<D, Windows::UI::Xaml::Markup::IXamlMetadataProvider, I...>
     {
@@ -143,8 +154,8 @@ namespace winrt
         }
     };
 
-    template <typename D, template <typename...> typename B, typename... I>
-    struct xaml_type : B<D, Windows::UI::Xaml::Data::INotifyPropertyChanged, I...>
+    template <typename D, bool R, template <typename...> typename B, typename... I>
+    struct xaml_type : B<D, Windows::UI::Xaml::Data::INotifyPropertyChanged, I...>, xaml_registration<D, R>
     {
         event_token PropertyChanged(Windows::UI::Xaml::Data::PropertyChangedEventHandler const& handler)
         {
@@ -163,7 +174,7 @@ namespace winrt
 
     protected:
 
-        using base_type = xaml_type<D, B, I...>;
+        using base_type = xaml_type<D, R, B, I...>;
 
         xaml_type(hstring const& uri)
         {
@@ -276,8 +287,44 @@ namespace winrt
     };
 
     template <typename D, typename... I>
-    using xaml_page = xaml_type<D, Windows::UI::Xaml::Controls::PageT, I...>;
+    using xaml_page = xaml_type<D, false, Windows::UI::Xaml::Controls::PageT, I...>;
 
     template <typename D, typename... I>
-    using xaml_user_control = xaml_type<D, Windows::UI::Xaml::Controls::UserControlT, I...>;
+    using xaml_user_control = xaml_type<D, true, Windows::UI::Xaml::Controls::UserControlT, I...>;
+
+    struct boxed_value : Windows::Foundation::IInspectable
+    {
+        boxed_value(std::nullptr_t = nullptr) noexcept {}
+        boxed_value(void* ptr, take_ownership_from_abi_t) noexcept : Windows::Foundation::IInspectable(ptr, take_ownership_from_abi) {}
+
+        template <typename T, typename = std::enable_if_t<impl::has_category_v<std::decay_t<T>>>>
+        boxed_value(T && value) : Windows::Foundation::IInspectable(box_value(std::forward<T>(value)))
+        {
+        }
+
+        template <typename T, typename = std::enable_if_t<impl::has_category_v<std::decay_t<T>>>>
+        operator T() const
+        {
+            return unbox_value<T>(*this);
+        }
+    };
+}
+
+namespace winrt::impl
+{
+    template <> struct guid_storage<boxed_value>
+    {
+        static constexpr guid value{ 0xAF86E2E0,0xB12D,0x4C6A,{ 0x9C,0x5A,0xD7,0xAA,0x65,0x10,0x1E,0x90 } };
+    };
+
+    template <> struct category<boxed_value>
+    {
+        using type = basic_category;
+    };
+
+    template <> struct name<boxed_value>
+    {
+        static constexpr auto& value{ L"Object" };
+        static constexpr auto& data{ "cinterface(IInspectable)" };
+    };
 }
