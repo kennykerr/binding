@@ -57,4 +57,3 @@ struct MyControl : xaml_user_control<MyControl>
     }
 };
 
-static bool registration{ xaml_registry::add<MyControl>() };

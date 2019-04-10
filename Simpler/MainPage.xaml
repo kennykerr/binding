@@ -1,5 +1,35 @@
 ﻿<Page xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:local="using:Sample">
 
-    <local:MyControl />
+  <!--<Page.DataContext>
+    <local:MyViewModelObject />
+  </Page.DataContext>-->
+
+  <StackPanel>
+
+    <TextBlock
+        VerticalAlignment="Center"
+        FontFamily="Segoe UI Semibold"
+        FontSize="72.0"
+        Text="{Binding Text, Mode=OneTime}"
+        TextAlignment="Center">
+      <TextBlock.DataContext>
+        <local:MyViewModelObject />
+      </TextBlock.DataContext>
+    </TextBlock>
+
+    <!--<TextBlock
+        VerticalAlignment="Center"
+        FontFamily="Segoe UI Semibold"
+        FontSize="72.0"
+        Text="{Binding Text, Mode=OneTime}"
+        TextAlignment="Center">
+      <TextBlock.DataContext>
+        <local:MyViewModelStruct />
+      </TextBlock.DataContext>
+    </TextBlock>-->
+  
+    <!--<local:MyControl />-->
+  
+  </StackPanel>
 
 </Page>

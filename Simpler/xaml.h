@@ -12,6 +12,17 @@ namespace winrt
         return single_threaded_observable_vector<T, Allocator>(std::forward<std::vector<T, Allocator>>(values));
     }
 
+    template<typename D, bool register_type = true>
+    struct xaml_registration
+    {
+        static inline bool registered{ xaml_registry::add<D>() };
+    };
+
+    template<typename D>
+    struct xaml_registration<D, false>
+    {
+    };
+
     struct xaml_member
     {
         xaml_member() noexcept {}
@@ -72,14 +83,49 @@ namespace winrt
         std::unique_ptr<accessor_abi> m_accessor;
     };
 
+    template<typename T>
+    struct xaml_non_observable_type : xaml_registration<T>
+    {
+        static void property_changed(T* /*self*/, hstring const& /*name*/) {}
+
+        static Windows::UI::Xaml::Markup::IXamlType get_type()
+        {
+            return xaml_type_base<T>::get_type();
+        }
+    };
+
+    template<typename T>
+    struct xaml_traits
+    {
+        static hstring GetRuntimeClassName()
+        {
+            return T::GetRuntimeClassName();
+        }
+
+        static xaml_member bind(T* self, hstring const& name)
+        {
+            return self->bind(name);
+        }
+
+        static void property_changed(T* self, hstring const& name)
+        {
+            self->property_changed(name);
+        }
+
+        static auto get_type()
+        {
+            return T::get_type();
+        }
+    };
+
     struct xaml_registry
     {
         template <typename T>
         static bool add()
         {
-            registry().add_type(T::GetRuntimeClassName(), []
+            registry().add_type(xaml_traits<T>::GetRuntimeClassName(), []
                 {
-                    static auto type = T::get_type();
+                    static auto type = xaml_traits<T>::get_type();
                     return type;
                 });
 
@@ -143,37 +189,12 @@ namespace winrt
         }
     };
 
-    template <typename D, template <typename...> typename B, typename... I>
-    struct xaml_type : B<D, inspectable, Windows::UI::Xaml::Data::INotifyPropertyChanged, I...>
+    template <typename D, bool register_type = true>
+    struct xaml_type_base : xaml_registration<D, register_type>
     {
-        event_token PropertyChanged(Windows::UI::Xaml::Data::PropertyChangedEventHandler const& handler)
-        {
-            return m_changed.add(handler);
-        }
-
-        void PropertyChanged(winrt::event_token token)
-        {
-            m_changed.remove(token);
-        }
-
         static Windows::UI::Xaml::Markup::IXamlType get_type()
         {
             return make<xaml_type_instance>();
-        }
-
-    protected:
-
-        using base_type = xaml_type<D, B, I...>;
-
-        xaml_type(hstring const& uri)
-        {
-            DataContext(*this);
-            Windows::UI::Xaml::Application::LoadComponent(*this, Windows::Foundation::Uri(uri));
-        }
-
-        void property_changed(hstring const& name)
-        {
-            m_changed(*this, Windows::UI::Xaml::Data::PropertyChangedEventArgs(name));
         }
 
     private:
@@ -197,14 +218,14 @@ namespace winrt
 
             inspectable GetValue(inspectable const& instance) const
             {
-                return get_self<D>(instance)->bind(m_name).get();
+                return xaml_traits<D>::bind(get_self<D>(instance), m_name).get();
             }
 
             void SetValue(inspectable const& instance, inspectable const& value) const
             {
                 auto self = get_self<D>(instance);
-                self->bind(m_name).put(value);
-                self->property_changed(m_name);
+                xaml_traits<D>::bind(self, m_name).put(value);
+                xaml_traits<D>::property_changed(self, m_name);
             }
 
             bool IsReadOnly() const
@@ -225,7 +246,7 @@ namespace winrt
         {
             hstring FullName() const
             {
-                return D::GetRuntimeClassName();
+                return xaml_traits<D>::GetRuntimeClassName();
             }
 
             auto ActivateInstance() const
@@ -270,13 +291,46 @@ namespace winrt
             void AddToMap(inspectable const&, inspectable const&, inspectable const&) const noexcept { }
             void RunInitializer() const noexcept { }
         };
+    };
+
+    template <typename D, bool register_type, template <typename...> typename B, typename... I>
+    struct xaml_observable : B<D, inspectable, Windows::UI::Xaml::Data::INotifyPropertyChanged, I...>, xaml_type_base<D, register_type>
+    {
+        event_token PropertyChanged(Windows::UI::Xaml::Data::PropertyChangedEventHandler const& handler)
+        {
+            return m_changed.add(handler);
+        }
+
+        void PropertyChanged(winrt::event_token token)
+        {
+            m_changed.remove(token);
+        }
+
+    protected:
+
+        friend struct xaml_traits<D>;
+
+        using base_type = xaml_observable<D, register_type, B, I...>;
+
+        xaml_observable(hstring const& uri)
+        {
+            DataContext(*this);
+            Windows::UI::Xaml::Application::LoadComponent(*this, Windows::Foundation::Uri(uri));
+        }
+
+        void property_changed(hstring const& name)
+        {
+            m_changed(*this, Windows::UI::Xaml::Data::PropertyChangedEventArgs(name));
+        }
+
+    private:
 
         event<Windows::UI::Xaml::Data::PropertyChangedEventHandler> m_changed;
     };
 
     template <typename D, typename... I>
-    using xaml_page = xaml_type<D, Windows::UI::Xaml::Controls::PageT, I...>;
+    using xaml_page = xaml_observable<D, false, Windows::UI::Xaml::Controls::PageT, I...>;
 
     template <typename D, typename... I>
-    using xaml_user_control = xaml_type<D, Windows::UI::Xaml::Controls::UserControlT, I...>;
+    using xaml_user_control = xaml_observable<D, true, Windows::UI::Xaml::Controls::UserControlT, I...>;
 }
