@@ -210,17 +210,17 @@ namespace winrt
                 return nullptr;
             }
 
-            inspectable GetValue(inspectable const& instance) const
+            inspectable GetValue(inspectable const& instance)
             {
-                auto self = get_self<D>(instance.as< Windows::UI::Xaml::Data::INotifyPropertyChanged>());
-                return self->bind(m_name).get();
+                resolve(instance);
+                return m_member.get();
             }
 
-            void SetValue(inspectable const& instance, inspectable const& value) const
+            void SetValue(inspectable const& instance, inspectable const& value)
             {
-                auto self = get_self<D>(instance.as< Windows::UI::Xaml::Data::INotifyPropertyChanged>());
-                self->bind(m_name).put(value);
-                self->property_changed(m_name);
+                resolve(instance);
+                m_member.put(value);
+                m_instance->property_changed(m_name);
             }
 
             bool IsReadOnly() const
@@ -234,7 +234,20 @@ namespace winrt
 
         private:
 
-            hstring m_name;
+            void resolve(inspectable const& instance)
+            {
+                if (m_key != get_abi(instance))
+                {
+                    m_key = get_abi(instance);
+                    m_instance = get_self<D>(instance.as<Windows::UI::Xaml::Data::INotifyPropertyChanged>())->get_strong();
+                    m_member = m_instance->bind(m_name);
+                }
+            }
+
+            hstring const m_name;
+            void* m_key{};
+            com_ptr<D> m_instance;
+            xaml_member m_member;
         };
 
         struct xaml_type_instance : implements<xaml_type_instance, Windows::UI::Xaml::Markup::IXamlType>
