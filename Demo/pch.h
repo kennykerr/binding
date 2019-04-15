@@ -1,15 +1,14 @@
 #pragma once
 
 #include <windows.h>
-#include <ShellScalingAPI.h>
-//#include "winuser.h"
-//#include <unknwn.h>
 #ifdef GetCurrentTime
 #undef GetCurrentTime
 #endif
-
-#include <windows.ui.xaml.hosting.desktopwindowxamlsource.h>
 #include <winrt/Windows.System.h>
-#include <winrt/windows.ui.xaml.hosting.h>
-#include <winrt/windows.ui.xaml.controls.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.UI.Xaml.h>
+#include <winrt/Windows.UI.Xaml.Controls.h>
+#include <winrt/Windows.UI.Xaml.Hosting.h>
 #include <winrt/Windows.UI.Xaml.Media.h>
+#include <Windows.UI.Xaml.Hosting.DesktopWindowXamlSource.h>

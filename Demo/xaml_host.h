@@ -1,12 +1,10 @@
 #pragma once
 
-#include "DesktopWindow.h"
-
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
-struct XamlIsland : DesktopWindow<XamlIsland>
+struct XamlHost 
 {
-    XamlIsland() noexcept
+    XamlHost() noexcept
     {
         WNDCLASS wc{};
         wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
@@ -28,7 +26,7 @@ struct XamlIsland : DesktopWindow<XamlIsland>
         InitXaml();
     }
 
-    ~XamlIsland()
+    ~XamlHost()
     {
         m_xamlManager.Close();
     }
@@ -47,17 +45,6 @@ struct XamlIsland : DesktopWindow<XamlIsland>
     {
         m_rootGrid.Children().Clear();
         m_rootGrid.Children().Append(content);
-    }
-
-    void DoResize(UINT width, UINT height)
-    {
-        OnSize(m_interopWindow, m_rootGrid, width, height);
-    }
-
-    LRESULT MessageHandler(UINT const message, WPARAM const wparam, LPARAM const lparam) noexcept
-    {
-        // TODO: handle messages here...
-        return base_type::MessageHandler(message, wparam, lparam);
     }
 
 private:
@@ -85,16 +72,55 @@ private:
         m_currentWidthPhysical = physicalWidth;
         m_currentHeightPhysical = physicalHeight;
 
-        auto scaleFactor = (float)m_currentDpi / 100;
-
         if (rootGrid != nullptr) {
-            rootGrid.Width(physicalWidth / scaleFactor);
-            rootGrid.Height(physicalHeight / scaleFactor);
+            rootGrid.Width(physicalWidth);
+            rootGrid.Height(physicalHeight);
         }
     }
 
-    UINT m_currentWidthPhysical{ 800 };
-    UINT m_currentHeightPhysical{ 600 };
+    static auto GetThisFromHandle(HWND const window) noexcept
+    {
+        return reinterpret_cast<XamlHost*>(GetWindowLongPtr(window, GWLP_USERDATA));
+    }
+
+    static LRESULT __stdcall WndProc(HWND const window, UINT const message, WPARAM const wparam, LPARAM const lparam) noexcept
+    {
+        WINRT_ASSERT(window);
+
+        if (WM_NCCREATE == message)
+        {
+            auto cs = reinterpret_cast<CREATESTRUCT*>(lparam);
+            auto that = static_cast<XamlHost*>(cs->lpCreateParams);
+            WINRT_ASSERT(that);
+            WINRT_ASSERT(!that->m_window);
+            that->m_window = window;
+            SetWindowLongPtr(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(that));
+        }
+        else if (auto that = GetThisFromHandle(window))
+        {
+            return that->MessageHandler(message, wparam, lparam);
+        }
+
+        return DefWindowProc(window, message, wparam, lparam);
+    }
+
+    LRESULT MessageHandler(UINT const message, WPARAM const wparam, LPARAM const lparam) noexcept
+    {
+        switch (message)
+        {
+            case WM_DESTROY:
+            {
+                PostQuitMessage(0);
+                return 0;
+            }
+        }
+
+        return DefWindowProc(m_window, message, wparam, lparam);
+    }
+
+    HWND m_window = nullptr;
+    UINT m_currentWidthPhysical{ 400 };
+    UINT m_currentHeightPhysical{ 300 };
     HWND m_interopWindow{ nullptr };
     winrt::Windows::UI::Xaml::UIElement m_content{ nullptr };
     winrt::Windows::UI::Xaml::Controls::Grid m_rootGrid{ nullptr };

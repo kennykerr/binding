@@ -7,5 +7,5 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <TextBlock FontSize="30.0" Text="Hello Desktop XAML from third party control" />
+    <TextBlock FontSize="30.0" Text="Hello third party control" />
 </UserControl>

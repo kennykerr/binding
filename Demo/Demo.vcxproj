@@ -32,7 +32,7 @@
     <ClInclude Include="DesktopWindow.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="XamlIsland.h" />
+    <ClInclude Include="xaml_host.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
