@@ -354,7 +354,6 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="packages.config" />
-    <None Include="XamlMarkup_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Control.xaml">

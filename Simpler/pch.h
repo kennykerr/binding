@@ -7,3 +7,6 @@
 #include "winrt/Windows.UI.Xaml.Markup.h"
 #include "winrt/coroutine.h"
 #include <functional>
+#include "xaml.h"
+
+using namespace std::literals;

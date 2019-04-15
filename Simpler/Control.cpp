@@ -1,7 +1,5 @@
 #include "pch.h"
-#include "xaml.h"
 
-using namespace std::literals;
 using namespace winrt;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::UI::Xaml::Controls;

@@ -37,9 +37,6 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="XamlMarkup_TemporaryKey.pfx">
-      <Filter>Build</Filter>
-    </None>
     <None Include="MainPage.xaml">
       <Filter>Xaml</Filter>
     </None>
