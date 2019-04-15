@@ -1,0 +1,10 @@
+namespace RuntimeComponent1
+{
+    [default_interface]
+    runtimeclass Control : Windows.UI.Xaml.Controls.UserControl
+    {
+        Control();
+        Int32 MyProperty;
+        String Name{ get; };
+    }
+}
