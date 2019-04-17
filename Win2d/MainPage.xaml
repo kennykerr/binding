@@ -1,0 +1,38 @@
+﻿<Page xmlns:local="using:Sample"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml">
+
+    <!--<Grid>-->
+        <!--<canvas:CanvasControl Draw="canvasControl_Draw" ClearColor="CornflowerBlue" />-->
+    <!--</Grid>-->
+    
+  <!--<StackPanel>
+
+    <TextBlock
+        VerticalAlignment="Center"
+        FontFamily="Segoe UI Semibold"
+        FontSize="72.0"
+        Text="{Binding Text}"
+        TextAlignment="Center">
+      <TextBlock.DataContext>
+        <local:MyViewModelObject />
+      </TextBlock.DataContext>
+    </TextBlock>
+
+    <TextBlock
+        VerticalAlignment="Center"
+        FontFamily="Segoe UI Semibold"
+        FontSize="72.0"
+        Text="{Binding Text, Mode=OneTime}"
+        TextAlignment="Center">
+      <TextBlock.DataContext>
+        <local:MyViewModelStruct />
+      </TextBlock.DataContext>
+    </TextBlock>
+  
+    <local:MyControl />
+  
+  </StackPanel>
+    -->
+
+</Page>
