@@ -1,0 +1,12 @@
+﻿<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+  <StackPanel Orientation="Vertical">
+    <StackPanel.Resources>
+      <Style TargetType="TextBox">
+        <Setter Property="FontSize" Value="48"/>
+      </Style>
+    </StackPanel.Resources>
+    <TextBox Text="{Binding Counter}" />
+    <TextBox Text="{Binding Text, Mode=TwoWay}" />
+    <TextBox Text="{Binding Text}" IsReadOnly="true"/>
+  </StackPanel>
+</UserControl>

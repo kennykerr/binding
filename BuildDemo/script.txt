@@ -1,0 +1,78 @@
+Demo Prereqs:
+update vsix, nuget, vpack - remove coroutine.h
+place xaml_host.h, xaml_bind.h
+install snippets
+IDE settings - font size, light theme, xaml text edit, 
+turn off 'show output window on build'
+download vcrt forwarder nuget, create nuget source, disable all others!
+NOTE: ctrl+shift+g --> F12
+
+Package Demo script:
+start VS 2019
+pre-install C++/WinRT VSIX ("winrt"), but show in Extensions
+create C++/winrt console app with same solution/project folder
+show nuget installation
+open prop sheet
+set verbosity to high
+build
+turn on show all files
+browse debug\generated files\winrt
+browse package dir, cppwinrt.exe, props/targets
+build
+set BP on uri
+run
+show debug visualizer
+
+
+Xaml Binding Demo script:
+frame problem, slides, diagram:
+Native Windows UI apps are cumbersome to write
+IDL required for all types referenced by xaml 
+Even internal app types like simple view models
+Goal: support activating and binding to any C++ type, in any module
+
+start with simple one-way binding on counter
+demo:
+start with existing binding\builddemo project
+open all cpp, xaml files
+walk thru xaml_app, xaml_page, xaml_user_control
+focus on control.cpp and conrol.xaml (shift-alt-enter)
+add one-way binding with property change notifications:
+    int m_counter{};
+    xaml_member bind(hstring const& name)
+    {
+        if (name == L"Counter")
+        {
+            return m_counter;
+        }
+        return {};
+    }
+        Loaded([&](auto && ...) { UpdateAsync(); });
+    fire_and_forget UpdateAsync()
+    {
+        while (true)
+        {
+            co_await 500ms;
+            co_await resume_foreground(Dispatcher());
+
+            ++m_counter;
+            property_changed(L"Counter");
+        }
+    }
+add two-way binding on text, showing fast inner dev loop experience
+    hstring m_text;
+        if (name == L"Text")
+        {
+            return m_text;
+        }
+        <TextBox
+            Grid.Row="1"
+            FontSize="48"
+            Text="{Binding Text, Mode=TwoWay}" />
+        <TextBox
+            Grid.Row="2"
+            FontSize="48"
+            IsReadOnly="true"
+            Text="{Binding Text}" />
+
+
