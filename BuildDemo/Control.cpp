@@ -6,35 +6,11 @@ using namespace Windows::UI::Xaml::Controls;
 
 struct DemoControl : xaml_user_control<DemoControl>
 {
-	int m_counter{};
-	hstring m_text;
-
-	static hstring type_name()
-	{
-		return L"Demo.Control";
-	}
-
-	xaml_member bind(hstring const& name)
-	{
-		if (name == L"Counter")
-		{
-			return m_counter;
-		}
-
-		if (name == L"Text")
-		{
-			return m_text;
-		}
-
-		return {};
-	}
-
 	DemoControl() : base_type(L"ms-appx:///Control.xaml")
 	{
 		DataContext(*this);
 		Loaded([&](auto && ...) { UpdateAsync(); });
 	}
-
 
 	fire_and_forget UpdateAsync()
 	{
@@ -47,4 +23,26 @@ struct DemoControl : xaml_user_control<DemoControl>
 			property_changed(L"Counter");
 		}
 	}
+
+    static hstring type_name()
+    {
+        return L"Demo.Control";
+    }
+
+    int m_counter{};
+    hstring m_text;
+
+    xaml_member bind(hstring const& name)
+    {
+        if (name == L"Counter")
+        {
+            return m_counter;
+        }
+        if (name == L"Text")
+        {
+            return m_text;
+        }
+
+        return {};
+    }
 };
