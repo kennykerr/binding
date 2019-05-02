@@ -2,6 +2,12 @@
 
 #pragma once
 
+#include <functional>
+#include "winrt/Windows.UI.Xaml.Controls.h"
+#include "winrt/Windows.UI.Xaml.Data.h"
+#include "winrt/Windows.UI.Xaml.Interop.h"
+#include "winrt/Windows.UI.Xaml.Markup.h"
+
 namespace winrt
 {
     using inspectable = Windows::Foundation::IInspectable;

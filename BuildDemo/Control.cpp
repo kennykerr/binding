@@ -1,8 +1,8 @@
 #include "pch.h"
+#include "winrt/Windows.UI.Core.h"
 
 using namespace winrt;
-using namespace Windows::Foundation::Collections;
-using namespace Windows::UI::Xaml::Controls;
+using namespace std::literals;
 
 struct DemoControl : xaml_user_control<DemoControl>
 {

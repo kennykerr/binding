@@ -16,7 +16,7 @@ struct App : xaml_app<App>
     void OnLaunched(LaunchActivatedEventArgs const&)
     {
         auto window = Window::Current();
-        window.Content(make<MainPage>());
+        window.Content( make<MainPage>() );
         window.Activate();
     }
 };
