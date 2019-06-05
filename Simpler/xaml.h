@@ -2,18 +2,10 @@
 
 #pragma once
 
-namespace winrt
+#include <functional>
+
+namespace winrt::impl
 {
-    using inspectable = Windows::Foundation::IInspectable;
-
-    template <typename T, typename Allocator = std::allocator<T>>
-    Windows::Foundation::Collections::IObservableVector<T> observable_vector(std::vector<T, Allocator> && values = {})
-    {
-        return single_threaded_observable_vector<T, Allocator>(std::forward<std::vector<T, Allocator>>(values));
-    }
-
-    struct xaml_member;
-
     template <typename T>
     class has_bind
     {
@@ -24,8 +16,11 @@ namespace winrt
 
         static constexpr bool value = get_value<T>(0);
     };
+}
 
-    template <typename T, std::enable_if_t<has_bind<T>::value, int> = 0>
+namespace winrt
+{
+    template <typename T, std::enable_if_t<impl::has_bind<T>::value, int> = 0>
     auto bind(T&& object, hstring const& name)
     {
         return object.bind(name);
@@ -40,7 +35,7 @@ namespace winrt
         {
         }
 
-        inspectable get() const
+        Windows::Foundation::IInspectable get() const
         {
             if (m_accessor)
             {
@@ -50,7 +45,7 @@ namespace winrt
             return {};
         }
 
-        void put(inspectable const& value) const
+        void put(Windows::Foundation::IInspectable const& value) const
         {
             if (m_accessor)
             {
@@ -87,8 +82,8 @@ namespace winrt
 
         struct accessor_abi
         {
-            virtual inspectable get() = 0;
-            virtual void put(inspectable const&) = 0;
+            virtual Windows::Foundation::IInspectable get() = 0;
+            virtual void put(Windows::Foundation::IInspectable const&) = 0;
             virtual xaml_member bind(hstring const& name) = 0;
             virtual bool can_bind() noexcept = 0;
         };
@@ -100,17 +95,19 @@ namespace winrt
             {
             }
 
-            inspectable get() final
+            Windows::Foundation::IInspectable get() final
             {
                 if constexpr (impl::has_category_v<T>)
                 {
                     return box_value(m_value);
                 }
-
-                return {};
+                else
+                {
+                    return {};
+                }
             }
 
-            void put([[maybe_unused]] inspectable const& value) final
+            void put([[maybe_unused]] Windows::Foundation::IInspectable const& value) final
             {
                 if constexpr (impl::has_category_v<T>)
                 {
@@ -124,8 +121,10 @@ namespace winrt
                 {
                     return winrt::bind(m_value, name);
                 }
-
-                return {};
+                else
+                {
+                    return {};
+                }
             }
 
             bool can_bind() noexcept final
@@ -294,20 +293,20 @@ namespace winrt
 
                 if (auto member = m_member.can_bind())
                 {
-                    return make<member_type>(m_member, m_name);
+                    return make<member_type>(*this, m_member, m_name);
                 }
 
                 return nullptr;
             }
 
-            inspectable GetValue(inspectable const& instance)
+            Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const& instance)
             {
                 WINRT_ASSERT(instance == *m_instance);
                 resolve();
                 return m_member.get();
             }
 
-            void SetValue(inspectable const& instance, inspectable const& value)
+            void SetValue(Windows::Foundation::IInspectable const& instance, Windows::Foundation::IInspectable const& value)
             {
                 WINRT_ASSERT(instance == *m_instance);
                 resolve();
@@ -339,7 +338,8 @@ namespace winrt
 
             struct member_type : implements<member_type, Windows::UI::Xaml::Markup::IXamlType>
             {
-                member_type(xaml_member const& member, hstring const& name) :
+                member_type(Windows::UI::Xaml::Markup::IXamlMember const& xamlMember, xaml_member const& member, hstring const& name) :
+                    m_xamlMember(xamlMember),
                     m_member(member),
                     m_name(name)
                 {
@@ -347,10 +347,10 @@ namespace winrt
 
                 hstring FullName() const
                 {
-                    return m_name;
+                    return L"Custom." + m_name;
                 }
 
-                auto ActivateInstance() const
+                Windows::Foundation::IInspectable ActivateInstance() const
                 {
                     return nullptr;
                 }
@@ -362,13 +362,13 @@ namespace winrt
 
                 bool IsConstructible() const
                 {
-                    return true;
+                    return false;
                 }
 
                 Windows::UI::Xaml::Interop::TypeName UnderlyingType() const
                 {
                     xaml_registry::add_once(*this);
-                    return { m_name, Windows::UI::Xaml::Interop::TypeKind::Custom };
+                    return { L"Custom." + m_name, Windows::UI::Xaml::Interop::TypeKind::Primitive };
                 }
 
                 bool IsBindable() const
@@ -384,7 +384,7 @@ namespace winrt
 
                 Windows::UI::Xaml::Markup::IXamlMember ContentProperty() const noexcept
                 {
-                    return {};
+                    return m_xamlMember;
                 }
                 bool IsArray() const noexcept
                 {
@@ -411,16 +411,16 @@ namespace winrt
                     return {};
                 }
 
-                inspectable CreateFromString(hstring const& value) const noexcept
+                Windows::Foundation::IInspectable CreateFromString(hstring const& value) const noexcept
                 {
                     value;
                     return {};
                 }
 
-                void AddToVector(inspectable const&, inspectable const&) const noexcept
+                void AddToVector(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
                 {
                 }
-                void AddToMap(inspectable const&, inspectable const&, inspectable const&) const noexcept
+                void AddToMap(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
                 {
                 }
                 void RunInitializer() const noexcept
@@ -429,6 +429,7 @@ namespace winrt
 
             private:
 
+                Windows::UI::Xaml::Markup::IXamlMember m_xamlMember;
                 xaml_member m_member;
                 hstring const m_name;
             };
@@ -453,12 +454,12 @@ namespace winrt
                 return D::GetRuntimeClassName();
             }
 
-            auto ActivateInstance() const
+            Windows::Foundation::IInspectable ActivateInstance() const
             {
                 return make<D>();
             }
 
-            auto BaseType() const
+            Windows::UI::Xaml::Markup::IXamlType BaseType() const
             {
                 return nullptr;
             }
@@ -491,14 +492,14 @@ namespace winrt
             Windows::UI::Xaml::Markup::IXamlType ItemType() const noexcept { return {}; }
             Windows::UI::Xaml::Markup::IXamlType KeyType() const noexcept { return {}; }
 
-            inspectable CreateFromString(hstring const& value) const noexcept
+            Windows::Foundation::IInspectable CreateFromString(hstring const& value) const noexcept
             {
                 value;
                 return {};
             }
 
-            void AddToVector(inspectable const&, inspectable const&) const noexcept { }
-            void AddToMap(inspectable const&, inspectable const&, inspectable const&) const noexcept { }
+            void AddToVector(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept { }
+            void AddToMap(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept { }
             void RunInitializer() const noexcept { }
         };
 

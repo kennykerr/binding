@@ -11,6 +11,8 @@ namespace winrt
 {
     xaml_member bind(Uri const& object, hstring const& name)
     {
+        object;
+        name;
         return {};
     }
 }
@@ -19,6 +21,7 @@ struct Member
 {
     xaml_member bind(hstring const& name)
     {
+        name;
         return {};
     }
 };
@@ -27,7 +30,7 @@ struct SampleControl : xaml_user_control<SampleControl>
 {
     int m_counter{};
     hstring m_text;
-    IObservableVector<int> m_list{ observable_vector<int>() };
+    IObservableVector<int> m_list{ single_threaded_observable_vector<int>() };
     Uri m_uri{ L"http://kennykerr.ca/about" };
     Member m_member;
 
