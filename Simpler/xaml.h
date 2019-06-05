@@ -155,6 +155,16 @@ namespace winrt
             return true;
         }
 
+        static bool add_once(Windows::UI::Xaml::Markup::IXamlType const& type)
+        {
+            registry().add_type(type.FullName(), [type]
+                {
+                    return type;
+                });
+
+            return true;
+        }
+
         static Windows::UI::Xaml::Markup::IXamlType get(hstring const& name)
         {
             return registry().get_type(name);
@@ -337,7 +347,7 @@ namespace winrt
 
                 hstring FullName() const
                 {
-                    return L"";
+                    return m_name;
                 }
 
                 auto ActivateInstance() const
@@ -345,7 +355,7 @@ namespace winrt
                     return nullptr;
                 }
 
-                auto BaseType() const
+                Windows::UI::Xaml::Markup::IXamlType BaseType() const
                 {
                     return nullptr;
                 }
@@ -357,6 +367,7 @@ namespace winrt
 
                 Windows::UI::Xaml::Interop::TypeName UnderlyingType() const
                 {
+                    xaml_registry::add_once(*this);
                     return { m_name, Windows::UI::Xaml::Interop::TypeKind::Custom };
                 }
 
