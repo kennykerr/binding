@@ -28,16 +28,29 @@ struct c_provider : implements<c_provider, Windows::UI::Xaml::Data::ICustomPrope
     }
 };
 
-struct uri_domain : implements<uri_domain, Windows::UI::Xaml::Data::ICustomProperty>
+template <typename T, auto GetProperty>
+struct uri_domain : implements<uri_domain<T, GetProperty>, Windows::UI::Xaml::Data::ICustomProperty>
 {
+    T m_object;
+
+    uri_domain(T const& object) :
+        m_object(object)
+    {
+    }
+
     Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const& target) const
     {
         auto s = get_class_name(target);
 
         target;
-        return box_value(L"Domain!");
+        //return box_value(m_object.Domain());
+
+        return box_value(((&m_object)->*(GetProperty))());
 
         //return make<c_provider>();
+    }
+    void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
+    {
     }
     bool CanWrite() const noexcept
     {
@@ -56,9 +69,6 @@ struct uri_domain : implements<uri_domain, Windows::UI::Xaml::Data::ICustomPrope
     {
         return {};
     }
-    void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
-    {
-    }
     Windows::Foundation::IInspectable GetIndexedValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
     {
 
@@ -69,12 +79,20 @@ struct uri_domain : implements<uri_domain, Windows::UI::Xaml::Data::ICustomPrope
     }
 };
 
-struct uri_provider : implements<uri_provider, Windows::UI::Xaml::Data::ICustomPropertyProvider>
+template <typename T>
+struct uri_provider : implements<uri_provider<T>, Windows::UI::Xaml::Data::ICustomPropertyProvider>
 {
+    T m_object;
+
+    uri_provider(T const& object) :
+        m_object(object)
+    {
+    }
+
     Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& name) const
     {
         name;
-        return make<uri_domain>();
+        return make<uri_domain<T, &Uri::Domain>>(m_object);
     }
     Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const&, Windows::UI::Xaml::Interop::TypeName const&) const noexcept
     {
@@ -101,7 +119,7 @@ namespace winrt
 
     Windows::Foundation::IInspectable box_value(Uri const& object)
     {
-        return make<uri_provider>();
+        return make<uri_provider<Uri>>(object);
     }
 }
 
