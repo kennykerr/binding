@@ -28,8 +28,8 @@ struct c_provider : implements<c_provider, Windows::UI::Xaml::Data::ICustomPrope
     }
 };
 
-template <typename T, auto GetProperty>
-struct uri_domain : implements<uri_domain<T, GetProperty>, Windows::UI::Xaml::Data::ICustomProperty>
+template <typename T, auto Getter, auto Setter = nullptr>
+struct uri_domain : implements<uri_domain<T, Getter, Setter>, Windows::UI::Xaml::Data::ICustomProperty>
 {
     T m_object;
 
@@ -38,19 +38,24 @@ struct uri_domain : implements<uri_domain<T, GetProperty>, Windows::UI::Xaml::Da
     {
     }
 
-    Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const& target) const
+    Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const&) const
     {
-        auto s = get_class_name(target);
-
-        target;
         //return box_value(m_object.Domain());
 
-        return box_value(((&m_object)->*(GetProperty))());
+        // TODO: maybe use is_member_object_pointer to decide whether Getter is member variable rather than member function
+        // for structs
+        static_assert(std::is_member_function_pointer_v<decltype(Getter)>);
 
-        //return make<c_provider>();
+        // Then create constexpr tables of bind info for each type and avoid having actual bind function overloads everywhere.
+
+        return box_value(((&m_object)->*(Getter))());
     }
-    void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
+    void SetValue(Windows::Foundation::IInspectable const&, [[maybe_unused]] Windows::Foundation::IInspectable const& value) const noexcept
     {
+        if constexpr (Setter != nullptr)
+        {
+            ((&m_object)->*(Setter))(unbox_value<hstring>(value));
+        }
     }
     bool CanWrite() const noexcept
     {
