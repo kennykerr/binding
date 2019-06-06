@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <functional>
-
 namespace winrt::impl
 {
     template <typename T>
@@ -31,7 +29,7 @@ namespace winrt
         xaml_member() noexcept {}
 
         template <typename T>
-        xaml_member(T& value) : m_accessor(std::make_shared<accessor<T>>(value))
+        xaml_member(T& value) : m_accessor{ new accessor<T>(value), take_ownership_from_abi }
         {
         }
 
@@ -80,7 +78,7 @@ namespace winrt
 
     private:
 
-        struct accessor_abi
+        struct accessor_abi : impl::unknown_abi
         {
             virtual Windows::Foundation::IInspectable get() = 0;
             virtual void put(Windows::Foundation::IInspectable const&) = 0;
@@ -132,12 +130,37 @@ namespace winrt
                 return std::is_class_v<T>;
             }
 
+            int32_t __stdcall QueryInterface(guid const&, void** result) noexcept final
+            {
+                *result = nullptr;
+                return impl::error_no_interface;
+            }
+
+            uint32_t __stdcall AddRef() noexcept final
+            {
+                return 1 + m_references.fetch_add(1, std::memory_order_relaxed);
+            }
+
+            uint32_t __stdcall Release() noexcept final
+            {
+                uint32_t const target = m_references.fetch_sub(1, std::memory_order_release) - 1;
+
+                if (target == 0)
+                {
+                    std::atomic_thread_fence(std::memory_order_acquire);
+                    delete this;
+                }
+
+                return target;
+            }
+
         private:
 
+            std::atomic<uint32_t> m_references{ 1 };
             T& m_value;
         };
 
-        std::shared_ptr<accessor_abi> m_accessor;
+        com_ptr<accessor_abi> m_accessor;
     };
 
     struct xaml_registry
@@ -171,7 +194,7 @@ namespace winrt
 
     private:
 
-        std::map<hstring, std::function<Windows::UI::Xaml::Markup::IXamlType()>> m_registry;
+        std::map<hstring, delegate<Windows::UI::Xaml::Markup::IXamlType()>> m_registry;
 
         xaml_registry() = default;
 
@@ -181,7 +204,7 @@ namespace winrt
             return s_registry;
         }
 
-        void add_type(hstring const& name, std::function<Windows::UI::Xaml::Markup::IXamlType()> const& get)
+        void add_type(hstring const& name, delegate<Windows::UI::Xaml::Markup::IXamlType()> const& get)
         {
             if (m_registry.find(name) == m_registry.end())
             {
