@@ -5,4 +5,5 @@
 #include "winrt/Windows.UI.Core.h"
 #include "winrt/Windows.UI.Xaml.Controls.h"
 #include "winrt/Windows.UI.Xaml.Data.h"
+#include "winrt/Windows.UI.Xaml.Interop.h"
 #include "winrt/Windows.UI.Xaml.Markup.h"

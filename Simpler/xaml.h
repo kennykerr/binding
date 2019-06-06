@@ -97,7 +97,7 @@ namespace winrt
             {
                 if constexpr (impl::has_category_v<T>)
                 {
-                    return box_value(m_value);
+                    return winrt::box_value(m_value);
                 }
                 else
                 {
@@ -297,8 +297,53 @@ namespace winrt
 
     private:
 
-        struct xaml_member_instance : implements<xaml_member_instance, Windows::UI::Xaml::Markup::IXamlMember>
+        struct xaml_member_instance : implements<xaml_member_instance, Windows::UI::Xaml::Markup::IXamlMember>//, Windows::UI::Xaml::Data::ICustomPropertyProvider>
         {
+
+            Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& name) const
+            {
+                name;
+                return nullptr;
+            }
+            Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const& name, Windows::UI::Xaml::Interop::TypeName const& type) const
+            {
+                name;
+                type;
+                return nullptr;
+            }
+            hstring GetStringRepresentation() const
+            {
+                return L"GetStringRepresentation";
+            }
+            auto Type()
+            {
+                struct result
+                {
+                    xaml_member_instance* instance;
+
+                    // TODO: make these call member functions
+
+                    operator Windows::UI::Xaml::Markup::IXamlType()
+                    {
+                        //instance->resolve();
+
+                        //if (auto member = instance->m_member.can_bind())
+                        //{
+                        //    return make<member_type>(*instance, instance->m_member, instance->m_name);
+                        //}
+
+                        return nullptr;
+                    }
+
+                    operator Windows::UI::Xaml::Interop::TypeName()
+                    {
+                        return { L"Name", Windows::UI::Xaml::Interop::TypeKind::Custom };
+                    }
+                };
+
+                return result{ this };
+            }
+
             xaml_member_instance(D* instance, hstring const& name) :
                 m_name(name)
             {
@@ -308,18 +353,6 @@ namespace winrt
             hstring Name() const
             {
                 return m_name;
-            }
-
-            Windows::UI::Xaml::Markup::IXamlType Type()
-            {
-                resolve();
-
-                if (auto member = m_member.can_bind())
-                {
-                    return make<member_type>(*this, m_member, m_name);
-                }
-
-                return nullptr;
             }
 
             Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const& instance)
@@ -359,103 +392,123 @@ namespace winrt
 
         private:
 
-            struct member_type : implements<member_type, Windows::UI::Xaml::Markup::IXamlType>
-            {
-                member_type(Windows::UI::Xaml::Markup::IXamlMember const& xamlMember, xaml_member const& member, hstring const& name) :
-                    m_xamlMember(xamlMember),
-                    m_member(member),
-                    m_name(name)
-                {
-                }
+            //struct member_type : implements<member_type, Windows::UI::Xaml::Markup::IXamlType, Windows::UI::Xaml::Data::ICustomPropertyProvider>
+            //{
+            //    Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& name) const
+            //    {
+            //        name;
+            //        return nullptr;
+            //    }
+            //    Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const& name, Windows::UI::Xaml::Interop::TypeName const& type) const
+            //    {
+            //        name;
+            //        type;
+            //        return nullptr;
+            //    }
+            //    hstring GetStringRepresentation() const
+            //    {
+            //        return L"GetStringRepresentation";
+            //    }
+            //    Windows::UI::Xaml::Interop::TypeName Type()
+            //    {
+            //        return { L"Name", Windows::UI::Xaml::Interop::TypeKind::Custom };
+            //    }
 
-                hstring FullName() const
-                {
-                    return L"Custom." + m_name;
-                }
+            //    member_type(Windows::UI::Xaml::Markup::IXamlMember const& xamlMember, xaml_member const& member, hstring const& name) :
+            //        m_xamlMember(xamlMember),
+            //        m_member(member),
+            //        m_name(name)
+            //    {
+            //    }
 
-                Windows::Foundation::IInspectable ActivateInstance() const
-                {
-                    return nullptr;
-                }
+            //    hstring FullName() const
+            //    {
+            //        return L"Custom." + m_name;
+            //    }
 
-                Windows::UI::Xaml::Markup::IXamlType BaseType() const
-                {
-                    return nullptr;
-                }
+            //    Windows::Foundation::IInspectable ActivateInstance() const
+            //    {
+            //        return nullptr;
+            //    }
 
-                bool IsConstructible() const
-                {
-                    return false;
-                }
+            //    Windows::UI::Xaml::Markup::IXamlType BaseType() const
+            //    {
+            //        return nullptr;
+            //    }
 
-                Windows::UI::Xaml::Interop::TypeName UnderlyingType() const
-                {
-                    xaml_registry::add_once(*this);
-                    return { L"Custom." + m_name, Windows::UI::Xaml::Interop::TypeKind::Primitive };
-                }
+            //    bool IsConstructible() const
+            //    {
+            //        return false;
+            //    }
 
-                bool IsBindable() const
-                {
-                    return true;
-                }
+            //    Windows::UI::Xaml::Interop::TypeName UnderlyingType() const
+            //    {
+            //        xaml_registry::add_once(*this);
+            //        return { L"Custom." + m_name, Windows::UI::Xaml::Interop::TypeKind::Primitive };
+            //    }
 
-                Windows::UI::Xaml::Markup::IXamlMember GetMember(hstring const& name) const
-                {
-                    name;
-                    return nullptr;
-                }
+            //    bool IsBindable() const
+            //    {
+            //        return true;
+            //    }
 
-                Windows::UI::Xaml::Markup::IXamlMember ContentProperty() const noexcept
-                {
-                    return m_xamlMember;
-                }
-                bool IsArray() const noexcept
-                {
-                    return {};
-                }
-                bool IsCollection() const noexcept
-                {
-                    return {};
-                }
-                bool IsDictionary() const noexcept
-                {
-                    return {};
-                }
-                bool IsMarkupExtension() const noexcept
-                {
-                    return {};
-                }
-                Windows::UI::Xaml::Markup::IXamlType ItemType() const noexcept
-                {
-                    return {};
-                }
-                Windows::UI::Xaml::Markup::IXamlType KeyType() const noexcept
-                {
-                    return {};
-                }
+            //    Windows::UI::Xaml::Markup::IXamlMember GetMember(hstring const& name) const
+            //    {
+            //        name;
+            //        return nullptr;
+            //    }
 
-                Windows::Foundation::IInspectable CreateFromString(hstring const& value) const noexcept
-                {
-                    value;
-                    return {};
-                }
+            //    Windows::UI::Xaml::Markup::IXamlMember ContentProperty() const noexcept
+            //    {
+            //        return m_xamlMember;
+            //    }
+            //    bool IsArray() const noexcept
+            //    {
+            //        return {};
+            //    }
+            //    bool IsCollection() const noexcept
+            //    {
+            //        return {};
+            //    }
+            //    bool IsDictionary() const noexcept
+            //    {
+            //        return {};
+            //    }
+            //    bool IsMarkupExtension() const noexcept
+            //    {
+            //        return {};
+            //    }
+            //    Windows::UI::Xaml::Markup::IXamlType ItemType() const noexcept
+            //    {
+            //        return {};
+            //    }
+            //    Windows::UI::Xaml::Markup::IXamlType KeyType() const noexcept
+            //    {
+            //        return {};
+            //    }
 
-                void AddToVector(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
-                {
-                }
-                void AddToMap(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
-                {
-                }
-                void RunInitializer() const noexcept
-                {
-                }
+            //    Windows::Foundation::IInspectable CreateFromString(hstring const& value) const noexcept
+            //    {
+            //        value;
+            //        return {};
+            //    }
 
-            private:
+            //    void AddToVector(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
+            //    {
+            //    }
+            //    void AddToMap(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
+            //    {
+            //    }
+            //    void RunInitializer() const noexcept
+            //    {
+            //    }
 
-                Windows::UI::Xaml::Markup::IXamlMember m_xamlMember;
-                xaml_member m_member;
-                hstring const m_name;
-            };
+            //private:
+
+            //    Windows::UI::Xaml::Markup::IXamlMember m_xamlMember;
+            //    xaml_member m_member;
+            //    hstring const m_name;
+            //};
 
             void resolve()
             {
@@ -470,8 +523,28 @@ namespace winrt
             xaml_member m_member;
         };
 
-        struct xaml_type_instance : implements<xaml_type_instance, Windows::UI::Xaml::Markup::IXamlType>
+        struct xaml_type_instance : implements<xaml_type_instance, Windows::UI::Xaml::Markup::IXamlType, Windows::UI::Xaml::Data::ICustomPropertyProvider>
         {
+            Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& name) const
+            {
+                name;
+                return nullptr;
+            }
+            Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const& name, Windows::UI::Xaml::Interop::TypeName const& type) const
+            {
+                name;
+                type;
+                return nullptr;
+            }
+            hstring GetStringRepresentation() const
+            {
+                return L"GetStringRepresentation";
+            }
+            Windows::UI::Xaml::Interop::TypeName Type()
+            {
+                return { L"Name", Windows::UI::Xaml::Interop::TypeKind::Custom };
+            }
+
             hstring FullName() const
             {
                 return D::GetRuntimeClassName();
