@@ -539,40 +539,4 @@ namespace winrt
 
     template <typename D, typename... I>
     using xaml_user_control = xaml_type<D, true, Windows::UI::Xaml::Controls::UserControlT, I...>;
-
-    struct boxed_value : Windows::Foundation::IInspectable
-    {
-        boxed_value(std::nullptr_t = nullptr) noexcept {}
-        boxed_value(void* ptr, take_ownership_from_abi_t) noexcept : Windows::Foundation::IInspectable(ptr, take_ownership_from_abi) {}
-
-        template <typename T, typename = std::enable_if_t<impl::has_category_v<std::decay_t<T>>>>
-        boxed_value(T && value) : Windows::Foundation::IInspectable(box_value(std::forward<T>(value)))
-        {
-        }
-
-        template <typename T, typename = std::enable_if_t<impl::has_category_v<std::decay_t<T>>>>
-        operator T() const
-        {
-            return unbox_value<T>(*this);
-        }
-    };
-}
-
-namespace winrt::impl
-{
-    template <> struct guid_storage<boxed_value>
-    {
-        static constexpr guid value{ 0xAF86E2E0,0xB12D,0x4C6A,{ 0x9C,0x5A,0xD7,0xAA,0x65,0x10,0x1E,0x90 } };
-    };
-
-    template <> struct category<boxed_value>
-    {
-        using type = basic_category;
-    };
-
-    template <> struct name<boxed_value>
-    {
-        static constexpr auto& value{ L"Object" };
-        static constexpr auto& data{ "cinterface(IInspectable)" };
-    };
 }

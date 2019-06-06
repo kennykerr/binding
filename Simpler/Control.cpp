@@ -17,7 +17,7 @@ namespace winrt
     }
 }
 
-struct Member
+struct MemberSample
 {
     xaml_member bind(hstring const& name)
     {
@@ -32,7 +32,7 @@ struct SampleControl : xaml_user_control<SampleControl>
     hstring m_text;
     IObservableVector<int> m_list{ single_threaded_observable_vector<int>() };
     Uri m_uri{ L"http://kennykerr.ca/about" };
-    Member m_member;
+    MemberSample m_member;
 
     static hstring type_name()
     {
@@ -41,30 +41,15 @@ struct SampleControl : xaml_user_control<SampleControl>
 
     xaml_member bind(hstring const& name)
     {
-        if (name == L"Uri")
-        {
-            return m_uri;
-        }
-
         if (name == L"Counter")
         {
             return m_counter;
         }
 
-        if (name == L"Member")
+        if (name == L"A")
         {
-            return m_member;
+            return m_uri;
         }
-
-        //if (name == L"Text")
-        //{
-        //    return m_text;
-        //}
-
-        //if (name == L"List")
-        //{
-        //    return m_list;
-        //}
 
         return {};
     }
@@ -72,6 +57,7 @@ struct SampleControl : xaml_user_control<SampleControl>
     SampleControl() : base_type(L"ms-appx:///Control.xaml")
     {
         DataContext(*this);
+
         Loaded([&](auto && ...)
             {
                 UpdateAsync();
