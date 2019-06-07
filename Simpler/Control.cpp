@@ -9,7 +9,7 @@ using namespace Windows::UI::Xaml::Controls;
 
 namespace winrt
 {
-    xaml_member bind(Uri const& object, hstring const& name)
+    xaml_member bind(Uri const& /*object*/, hstring const& /*name*/)
     {
         return {};
     }
@@ -17,10 +17,48 @@ namespace winrt
 
 struct Member
 {
-    xaml_member bind(hstring const& name)
+    xaml_member bind(hstring const& /*name*/)
     {
         return {};
     }
+};
+
+struct UriThing : xaml_type<UriThing, true, implements>
+{
+    static hstring GetRuntimeClassName() { return L"UriThing"; }
+
+    xaml_member bind(hstring const& name)
+    {
+        if (name == L"Domain")
+        {
+            return m_domain;
+        }
+
+        return {};
+    }
+
+private:
+
+    hstring m_domain{ L"Some string value" };
+};
+
+struct ViewModel : xaml_type<ViewModel, true, implements>
+{
+    static hstring GetRuntimeClassName() { return L"ViewModel"; }
+
+    xaml_member bind(hstring const& name)
+    {
+        if (name == L"Uri")
+        {
+            return m_thing;
+        }
+
+        return {};
+    }
+
+private:
+
+    UriThing m_thing;
 };
 
 struct SampleControl : xaml_user_control<SampleControl>
@@ -38,20 +76,22 @@ struct SampleControl : xaml_user_control<SampleControl>
 
     xaml_member bind(hstring const& name)
     {
-        if (name == L"Uri")
-        {
-            return m_uri;
-        }
+        name;
 
-        if (name == L"Counter")
-        {
-            return m_counter;
-        }
+        //if (name == L"Uri")
+        //{
+        //    return m_uri;
+        //}
 
-        if (name == L"Member")
-        {
-            return m_member;
-        }
+        //if (name == L"Counter")
+        //{
+        //    return m_counter;
+        //}
+
+        //if (name == L"Member")
+        //{
+        //    return m_member;
+        //}
 
         //if (name == L"Text")
         //{
@@ -68,11 +108,8 @@ struct SampleControl : xaml_user_control<SampleControl>
 
     SampleControl() : base_type(L"ms-appx:///Control.xaml")
     {
-        DataContext(*this);
-        Loaded([&](auto && ...)
-            {
-                UpdateAsync();
-            });
+        DataContext(make<ViewModel>());
+        Loaded([&](auto && ...) { UpdateAsync(); });
     }
 
     fire_and_forget UpdateAsync()

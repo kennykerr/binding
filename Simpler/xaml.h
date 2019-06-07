@@ -262,6 +262,11 @@ namespace winrt
 
         static inline D* s_last_type;
 
+        xaml_type()
+        {
+            s_last_type = static_cast<D*>(this);
+        }
+
         xaml_type(hstring const& uri)
         {
             Windows::UI::Xaml::Application::LoadComponent(*this, Windows::Foundation::Uri(uri));

@@ -6,10 +6,10 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock
+        <!--<TextBlock
             Grid.Row="0"
             FontSize="48"
-            Text="{Binding Counter}" />
+            Text="{Binding Counter}" />-->
         <TextBlock
             Grid.Row="1"
             FontSize="48"
