@@ -5,7 +5,7 @@
 namespace winrt::impl
 {
     template <typename T>
-    struct binding;
+    struct bind_member;
 
     template <typename T>
     class has_bind
@@ -16,6 +16,122 @@ namespace winrt::impl
     public:
 
         static constexpr bool value = get_value<T>(0);
+    };
+
+    template <typename T>
+    struct bind_object_member : implements<bind_object_member<T>, Windows::UI::Xaml::Data::ICustomProperty>
+    {
+        bind_object_member(T const& object, hstring const& member) :
+            m_object(object),
+            m_member{ member }
+        {
+        }
+
+        auto GetValue(Windows::Foundation::IInspectable const&)
+        {
+            return m_member.get(m_object);
+        }
+        void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const& value)
+        {
+            m_member.set(m_object, value);
+        }
+        bool CanWrite() const noexcept
+        {
+            return true;
+        }
+        bool CanRead() const noexcept
+        {
+            return true;
+        }
+
+        Windows::UI::Xaml::Interop::TypeName Type() const noexcept
+        {
+            return {};
+        }
+
+        hstring Name() const noexcept
+        {
+            return {};
+        }
+
+        Windows::Foundation::IInspectable GetIndexedValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
+        {
+            return {};
+        }
+
+        void SetIndexedValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
+        {
+        }
+
+    private:
+        T m_object;
+        bind_member<T> m_member;
+    };
+
+    template <typename T>
+    struct bind_object : implements<bind_object<T>, Windows::UI::Xaml::Data::ICustomPropertyProvider, Windows::UI::Xaml::Data::INotifyPropertyChanged>
+    {
+        bind_object(T const& object) :
+            m_object(object)
+        {
+        }
+
+        event_token PropertyChanged(Windows::UI::Xaml::Data::PropertyChangedEventHandler const& handler)
+        {
+            return m_changed.add(handler);
+        }
+
+        void PropertyChanged(winrt::event_token const& token)
+        {
+            m_changed.remove(token);
+        }
+
+        Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& member) const
+        {
+            return make<bind_object_member<T>>(m_object, member);
+        }
+
+        Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const&, Windows::UI::Xaml::Interop::TypeName const&) const noexcept
+        {
+            return {};
+        }
+
+        hstring GetStringRepresentation() const noexcept
+        {
+            return {};
+        }
+
+        Windows::UI::Xaml::Interop::TypeName Type() const noexcept
+        {
+            return {};
+        }
+
+    private:
+        T m_object;
+        event<Windows::UI::Xaml::Data::PropertyChangedEventHandler> m_changed;
+    };
+}
+
+namespace winrt::impl
+{
+    template <> struct bind_member<Windows::Foundation::Uri>
+    {
+        hstring member;
+
+        Windows::Foundation::IInspectable get(Windows::Foundation::Uri const& object) const
+        {
+            if (member == L"Domain") return box_value(object.Domain());
+            if (member == L"Port") return box_value(object.Port());
+            WINRT_ASSERT(false);
+            return nullptr;
+        }
+
+        void set(Windows::Foundation::Uri const& object, Windows::Foundation::IInspectable const& value) const
+        {
+            object;
+            value;
+            WINRT_ASSERT(false);
+        }
     };
 }
 
