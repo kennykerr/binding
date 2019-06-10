@@ -13,6 +13,6 @@
         <TextBlock
             Grid.Row="1"
             FontSize="48"
-            Text="{Binding A.B}" />
+            Text="{Binding Uri.Domain}" />
     </Grid>
 </UserControl>

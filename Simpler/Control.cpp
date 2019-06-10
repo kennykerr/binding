@@ -1,61 +1,58 @@
 #include "pch.h"
 #include "xaml.h"
 
+namespace winrt::impl
+{
+    template <> struct binding<Windows::Foundation::Uri>
+    {
+        static Windows::Foundation::IInspectable get(Windows::Foundation::Uri const& object, hstring const& name)
+        {
+            if (name == L"Domain") return box_value(object.Domain());
+            if (name == L"Port") return box_value(object.Port());
+            WINRT_ASSERT(false);
+            return nullptr;
+        }
+
+        static void set(Windows::Foundation::Uri const& object, hstring const& name, Windows::Foundation::IInspectable const& value)
+        {
+            object;
+            name;
+            value;
+
+            // TODO: only add if (...) for properties that are writable
+
+            // You seem to have an invalid binding expression.
+            WINRT_ASSERT(false);
+        }
+    };
+}
+
 using namespace std::literals;
 using namespace winrt;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::UI::Xaml::Controls;
 
-struct c_provider : implements<c_provider, Windows::UI::Xaml::Data::ICustomPropertyProvider>
-{
-    Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& name) const
-    {
-        name;
-        return nullptr;
-    }
-    Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const&, Windows::UI::Xaml::Interop::TypeName const&) const noexcept
-    {
-        return nullptr;
-    }
-    hstring GetStringRepresentation() const noexcept
-    {
-        return {};
-    }
-    Windows::UI::Xaml::Interop::TypeName Type() const noexcept
-    {
-        return {};
-    }
-};
 
-template <typename T, auto Getter, auto Setter = nullptr>
-struct uri_domain : implements<uri_domain<T, Getter, Setter>, Windows::UI::Xaml::Data::ICustomProperty>
+template <typename T>
+struct uri_domain : implements<uri_domain<T>, Windows::UI::Xaml::Data::ICustomProperty>
 {
     T m_object;
+    hstring m_name;
 
-    uri_domain(T const& object) :
-        m_object(object)
+    uri_domain(T const& object, hstring const& name) :
+        m_object(object),
+        m_name(name)
     {
     }
 
     Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const&) const
     {
-        //return box_value(m_object.Domain());
-
-        // TODO: maybe use is_member_object_pointer to decide whether Getter is member variable rather than member function
-        // for structs
-        static_assert(std::is_member_function_pointer_v<decltype(Getter)>);
-
-        // Then create constexpr tables of bind info for each type and avoid having actual bind function overloads everywhere.
-
-        return box_value(((&m_object)->*(Getter))());
+        return winrt::impl::binding<T>::get(m_object, m_name);
     }
     void SetValue(Windows::Foundation::IInspectable const&, [[maybe_unused]] Windows::Foundation::IInspectable const& value) const noexcept
     {
-        if constexpr (Setter != nullptr)
-        {
-            ((&m_object)->*(Setter))(unbox_value<hstring>(value));
-        }
+        winrt::impl::binding<T>::set(m_object, m_name, value);
     }
     bool CanWrite() const noexcept
     {
@@ -85,9 +82,20 @@ struct uri_domain : implements<uri_domain<T, Getter, Setter>, Windows::UI::Xaml:
 };
 
 template <typename T>
-struct uri_provider : implements<uri_provider<T>, Windows::UI::Xaml::Data::ICustomPropertyProvider>
+struct uri_provider : implements<uri_provider<T>, Windows::UI::Xaml::Data::ICustomPropertyProvider, Windows::UI::Xaml::Data::INotifyPropertyChanged>
 {
     T m_object;
+
+    event_token PropertyChanged(Windows::UI::Xaml::Data::PropertyChangedEventHandler const& handler)
+    {
+        handler;
+        return {};
+    }
+
+    void PropertyChanged(winrt::event_token )
+    {
+        
+    }
 
     uri_provider(T const& object) :
         m_object(object)
@@ -97,7 +105,7 @@ struct uri_provider : implements<uri_provider<T>, Windows::UI::Xaml::Data::ICust
     Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& name) const
     {
         name;
-        return make<uri_domain<T, &Uri::Domain>>(m_object);
+        return make<uri_domain<T>>(m_object, name);
     }
     Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const&, Windows::UI::Xaml::Interop::TypeName const&) const noexcept
     {
@@ -157,7 +165,7 @@ struct SampleControl : xaml_user_control<SampleControl>
             return m_counter;
         }
 
-        if (name == L"A")
+        if (name == L"Uri")
         {
             return m_uri;
         }

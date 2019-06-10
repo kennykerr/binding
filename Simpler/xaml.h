@@ -5,6 +5,9 @@
 namespace winrt::impl
 {
     template <typename T>
+    struct binding;
+
+    template <typename T>
     class has_bind
     {
         template <typename U, typename = decltype(std::declval<U>().bind(L""))> static constexpr bool get_value(int) { return true; }
@@ -391,124 +394,6 @@ namespace winrt
             }
 
         private:
-
-            //struct member_type : implements<member_type, Windows::UI::Xaml::Markup::IXamlType, Windows::UI::Xaml::Data::ICustomPropertyProvider>
-            //{
-            //    Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& name) const
-            //    {
-            //        name;
-            //        return nullptr;
-            //    }
-            //    Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const& name, Windows::UI::Xaml::Interop::TypeName const& type) const
-            //    {
-            //        name;
-            //        type;
-            //        return nullptr;
-            //    }
-            //    hstring GetStringRepresentation() const
-            //    {
-            //        return L"GetStringRepresentation";
-            //    }
-            //    Windows::UI::Xaml::Interop::TypeName Type()
-            //    {
-            //        return { L"Name", Windows::UI::Xaml::Interop::TypeKind::Custom };
-            //    }
-
-            //    member_type(Windows::UI::Xaml::Markup::IXamlMember const& xamlMember, xaml_member const& member, hstring const& name) :
-            //        m_xamlMember(xamlMember),
-            //        m_member(member),
-            //        m_name(name)
-            //    {
-            //    }
-
-            //    hstring FullName() const
-            //    {
-            //        return L"Custom." + m_name;
-            //    }
-
-            //    Windows::Foundation::IInspectable ActivateInstance() const
-            //    {
-            //        return nullptr;
-            //    }
-
-            //    Windows::UI::Xaml::Markup::IXamlType BaseType() const
-            //    {
-            //        return nullptr;
-            //    }
-
-            //    bool IsConstructible() const
-            //    {
-            //        return false;
-            //    }
-
-            //    Windows::UI::Xaml::Interop::TypeName UnderlyingType() const
-            //    {
-            //        xaml_registry::add_once(*this);
-            //        return { L"Custom." + m_name, Windows::UI::Xaml::Interop::TypeKind::Primitive };
-            //    }
-
-            //    bool IsBindable() const
-            //    {
-            //        return true;
-            //    }
-
-            //    Windows::UI::Xaml::Markup::IXamlMember GetMember(hstring const& name) const
-            //    {
-            //        name;
-            //        return nullptr;
-            //    }
-
-            //    Windows::UI::Xaml::Markup::IXamlMember ContentProperty() const noexcept
-            //    {
-            //        return m_xamlMember;
-            //    }
-            //    bool IsArray() const noexcept
-            //    {
-            //        return {};
-            //    }
-            //    bool IsCollection() const noexcept
-            //    {
-            //        return {};
-            //    }
-            //    bool IsDictionary() const noexcept
-            //    {
-            //        return {};
-            //    }
-            //    bool IsMarkupExtension() const noexcept
-            //    {
-            //        return {};
-            //    }
-            //    Windows::UI::Xaml::Markup::IXamlType ItemType() const noexcept
-            //    {
-            //        return {};
-            //    }
-            //    Windows::UI::Xaml::Markup::IXamlType KeyType() const noexcept
-            //    {
-            //        return {};
-            //    }
-
-            //    Windows::Foundation::IInspectable CreateFromString(hstring const& value) const noexcept
-            //    {
-            //        value;
-            //        return {};
-            //    }
-
-            //    void AddToVector(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
-            //    {
-            //    }
-            //    void AddToMap(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
-            //    {
-            //    }
-            //    void RunInitializer() const noexcept
-            //    {
-            //    }
-
-            //private:
-
-            //    Windows::UI::Xaml::Markup::IXamlMember m_xamlMember;
-            //    xaml_member m_member;
-            //    hstring const m_name;
-            //};
 
             void resolve()
             {
