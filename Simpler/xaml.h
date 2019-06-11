@@ -19,9 +19,6 @@ namespace winrt::impl
     };
 
     template <typename T>
-    struct bind_object;
-
-    template <typename T>
     class has_bind
     {
         template <typename U, typename = decltype(std::declval<U>().bind(L""))> static constexpr bool get_value(int) { return true; }
@@ -33,13 +30,16 @@ namespace winrt::impl
     };
 
     template <typename T>
+    struct bind_object;
+
+    template <typename T>
     struct bind_property : implements<bind_property<T>, Windows::UI::Xaml::Data::ICustomProperty>
     {
-        bind_property(bind_object<T>* object, T const& property, hstring const& name) :
+        bind_property(com_ptr<bind_object<T>>&& object, T const& property, hstring const& name) :
+            m_object(std::move(object)),
             m_property(property),
             m_binding{ name }
         {
-            m_object.copy_from(object);
         }
 
         auto GetValue(Windows::Foundation::IInspectable const&) const
@@ -113,7 +113,7 @@ namespace winrt::impl
 
         Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& member)
         {
-            return make<bind_property<T>>(this, m_object, member);
+            return make<bind_property<T>>(get_strong(), m_object, member);
         }
 
         Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const&, Windows::UI::Xaml::Interop::TypeName const&) const noexcept
@@ -135,40 +135,71 @@ namespace winrt::impl
         T m_object;
         event<Windows::UI::Xaml::Data::PropertyChangedEventHandler> m_changed;
     };
-}
 
-namespace winrt::impl
-{
-    template <> struct bind_member<Windows::Foundation::Uri>
+    struct xaml_registry
     {
-        hstring name;
-
-        Windows::Foundation::IInspectable get(Windows::Foundation::Uri const& object) const
+        template <typename T>
+        static bool add()
         {
-            if (name.empty()) return make<bind_object<Windows::Foundation::Uri>>(object);
-            if (name == L"Domain") return box_value(object.Domain());
-            if (name == L"Port") return box_value(object.Port());
-            WINRT_ASSERT(false);
-            return nullptr;
+            registry().add_type(T::GetRuntimeClassName(), []
+                {
+                    static auto type = T::get_type();
+                    return type;
+                });
+
+            return true;
         }
 
-        void set(Windows::Foundation::Uri const& object, Windows::Foundation::IInspectable const& value) const
+        static Windows::UI::Xaml::Markup::IXamlType get(hstring const& name)
         {
-            object;
-            value;
-            WINRT_ASSERT(false);
+            return registry().get_type(name);
+        }
+
+    private:
+
+        std::map<hstring, winrt::delegate<Windows::UI::Xaml::Markup::IXamlType()>> m_registry;
+
+        xaml_registry() = default;
+
+        inline static xaml_registry& registry() noexcept
+        {
+            // TODO: Try to avoid magic static (hopefully std::map has constexpr zero-init constructor)
+            static xaml_registry s_registry;
+            return s_registry;
+        }
+
+        void add_type(hstring const& name, winrt::delegate<Windows::UI::Xaml::Markup::IXamlType()> const& get)
+        {
+            if (m_registry.find(name) == m_registry.end())
+            {
+                m_registry[name] = get;
+            }
+        }
+
+        Windows::UI::Xaml::Markup::IXamlType get_type(hstring const& name) const
+        {
+            auto info = m_registry.find(name);
+
+            if (info != m_registry.end())
+            {
+                return info->second();
+            }
+
+            return {};
         }
     };
 }
 
 namespace winrt
 {
+    // In winrt namespace so that developers can overload bind
     template <typename T, std::enable_if_t<impl::has_bind<T>::value, int> = 0>
     auto bind(T&& object, hstring const& name)
     {
         return object.bind(name);
     }
 
+    // Type returned by winrt::bind function to provide type inference
     struct xaml_binding
     {
         xaml_binding() noexcept {}
@@ -270,72 +301,10 @@ namespace winrt
         com_ptr<accessor_abi> m_accessor;
     };
 
-    struct xaml_registry
-    {
-        template <typename T>
-        static bool add()
-        {
-            registry().add_type(T::GetRuntimeClassName(), []
-                {
-                    static auto type = T::get_type();
-                    return type;
-                });
-
-            return true;
-        }
-
-        static bool add_once(Windows::UI::Xaml::Markup::IXamlType const& type)
-        {
-            registry().add_type(type.FullName(), [type]
-                {
-                    return type;
-                });
-
-            return true;
-        }
-
-        static Windows::UI::Xaml::Markup::IXamlType get(hstring const& name)
-        {
-            return registry().get_type(name);
-        }
-
-    private:
-
-        std::map<hstring, delegate<Windows::UI::Xaml::Markup::IXamlType()>> m_registry;
-
-        xaml_registry() = default;
-
-        inline static xaml_registry& registry() noexcept
-        {
-            static xaml_registry s_registry;
-            return s_registry;
-        }
-
-        void add_type(hstring const& name, delegate<Windows::UI::Xaml::Markup::IXamlType()> const& get)
-        {
-            if (m_registry.find(name) == m_registry.end())
-            {
-                m_registry[name] = get;
-            }
-        }
-
-        Windows::UI::Xaml::Markup::IXamlType get_type(hstring const& name) const
-        {
-            auto info = m_registry.find(name);
-
-            if (info != m_registry.end())
-            {
-                return info->second();
-            }
-
-            return {};
-        }
-    };
-
     template <typename D, bool Register = true>
     struct xaml_registration
     {
-        static inline bool registered{ xaml_registry::add<D>() };
+        static inline bool registered{ impl::xaml_registry::add<D>() };
     };
 
     template <typename D>
@@ -353,7 +322,7 @@ namespace winrt
 
         Windows::UI::Xaml::Markup::IXamlType GetXamlType(hstring const& name) const
         {
-            return xaml_registry::get(name);
+            return impl::xaml_registry::get(name);
         }
 
         com_array<Windows::UI::Xaml::Markup::XmlnsDefinition> GetXmlnsDefinitions() const
@@ -404,50 +373,26 @@ namespace winrt
 
     private:
 
-        struct xaml_member_instance : implements<xaml_member_instance, Windows::UI::Xaml::Markup::IXamlMember>
+        struct xaml_member : implements<xaml_member, Windows::UI::Xaml::Markup::IXamlMember>
         {
-
-            Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& name) const
+            xaml_member(com_ptr<D>&& object, hstring const& name) :
+                m_object(std::move(object)),
+                m_name(name),
+                m_binding{ bind(*m_object, m_name) }
             {
-                name;
-                return nullptr;
-            }
-            Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const& name, Windows::UI::Xaml::Interop::TypeName const& type) const
-            {
-                name;
-                type;
-                return nullptr;
-            }
-            hstring GetStringRepresentation() const
-            {
-                return L"GetStringRepresentation";
-            }
-            Windows::UI::Xaml::Markup::IXamlType Type() const noexcept
-            {
-                return {};
             }
 
-            xaml_member_instance(D* instance, hstring const& name) :
-                m_name(name)
+            Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const& object)
             {
-                m_instance.copy_from(instance);
-                m_member = bind(*m_instance, m_name);
+                resolve(object);
+                return m_binding.get();
             }
 
-            hstring Name() const
+            void SetValue(Windows::Foundation::IInspectable const& object, Windows::Foundation::IInspectable const& value)
             {
-                return m_name;
-            }
-
-            Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const&)
-            {
-                return m_member.get();
-            }
-
-            void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const& value)
-            {
-                m_member.set(value);
-                m_instance->property_changed(m_name);
+                resolve(object);
+                m_binding.set(value);
+                m_object->property_changed(m_name);
             }
 
             bool IsReadOnly() const
@@ -465,39 +410,35 @@ namespace winrt
                 return {};
             }
 
+            hstring Name() const noexcept
+            {
+                return {};
+            }
+
+            Windows::UI::Xaml::Markup::IXamlType Type() const noexcept
+            {
+                return {};
+            }
+
             Windows::UI::Xaml::Markup::IXamlType TargetType() const noexcept
             {
                 return {};
             }
 
         private:
-            com_ptr<D> m_instance;
+
+            void resolve(Windows::Foundation::IInspectable const&)
+            {
+                // don't rely on static?
+            }
+
+            com_ptr<D> m_object;
             hstring const m_name;
-            xaml_binding m_member;
+            xaml_binding m_binding;
         };
 
-        struct xaml_type_instance : implements<xaml_type_instance, Windows::UI::Xaml::Markup::IXamlType, Windows::UI::Xaml::Data::ICustomPropertyProvider>
+        struct xaml_type_instance : implements<xaml_type_instance, Windows::UI::Xaml::Markup::IXamlType>
         {
-            Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& name) const
-            {
-                name;
-                return nullptr;
-            }
-            Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const& name, Windows::UI::Xaml::Interop::TypeName const& type) const
-            {
-                name;
-                type;
-                return nullptr;
-            }
-            hstring GetStringRepresentation() const
-            {
-                return L"GetStringRepresentation";
-            }
-            Windows::UI::Xaml::Interop::TypeName Type()
-            {
-                return { L"Name", Windows::UI::Xaml::Interop::TypeKind::Custom };
-            }
-
             hstring FullName() const
             {
                 return D::GetRuntimeClassName();
@@ -530,7 +471,7 @@ namespace winrt
 
             Windows::UI::Xaml::Markup::IXamlMember GetMember(hstring const& name) const
             {
-                return make<xaml_member_instance>(s_last_type, name);
+                return make<xaml_member>(s_last_type->get_strong(), name);
             }
 
             Windows::UI::Xaml::Markup::IXamlMember ContentProperty() const noexcept { return {}; }
