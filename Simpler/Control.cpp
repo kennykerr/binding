@@ -11,29 +11,29 @@ using namespace Windows::UI::Xaml::Controls;
 
 
 
-namespace winrt
-{
-    xaml_member bind(Uri const& object, hstring const& name)
-    {
-        object;
-        name;
-        return {};
-    }
-
-    Windows::Foundation::IInspectable box_value(Uri const& object)
-    {
-        return make<impl::bind_object<Uri>>(object);
-    }
-}
-
-struct MemberSample
-{
-    xaml_member bind(hstring const& name)
-    {
-        name;
-        return {};
-    }
-};
+//namespace winrt
+//{
+//    xaml_binding bind(Uri const& object, hstring const& name)
+//    {
+//        object;
+//        name;
+//        return {};
+//    }
+//
+//    Windows::Foundation::IInspectable box_value(Uri const& object)
+//    {
+//        return make<impl::bind_object<Uri>>(object);
+//    }
+//}
+//
+//struct MemberSample
+//{
+//    xaml_binding bind(hstring const& name)
+//    {
+//        name;
+//        return {};
+//    }
+//};
 
 struct SampleControl : xaml_user_control<SampleControl>
 {
@@ -41,14 +41,14 @@ struct SampleControl : xaml_user_control<SampleControl>
     hstring m_text;
     IObservableVector<int> m_list{ single_threaded_observable_vector<int>() };
     Uri m_uri{ L"http://kennykerr.ca/about" };
-    MemberSample m_member;
+    //MemberSample m_member;
 
     static hstring type_name()
     {
         return L"Sample.Control";
     }
 
-    xaml_member bind(hstring const& name)
+    xaml_binding bind(hstring const& name)
     {
         if (name == L"Counter")
         {
@@ -58,6 +58,11 @@ struct SampleControl : xaml_user_control<SampleControl>
         if (name == L"Uri")
         {
             return m_uri;
+        }
+
+        if (name == L"Text")
+        {
+            return m_text;
         }
 
         return {};

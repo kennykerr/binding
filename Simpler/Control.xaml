@@ -4,6 +4,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <TextBlock
@@ -14,5 +15,14 @@
             Grid.Row="1"
             FontSize="48"
             Text="{Binding Uri.Domain}" />
+        <TextBox
+            Grid.Row="2"
+            FontSize="48"
+            Text="{Binding Text, Mode=TwoWay}" />
+        <TextBox
+            Grid.Row="3"
+            FontSize="48"
+            IsReadOnly="true"
+            Text="{Binding Text}" />
     </Grid>
 </UserControl>
