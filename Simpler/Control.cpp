@@ -9,7 +9,7 @@ namespace winrt::impl
     {
         hstring name;
 
-        Windows::Foundation::IInspectable get(Windows::Foundation::Uri const& object) const
+        Windows::Foundation::IInspectable get(Windows::Foundation::Uri const& object, hstring const&) const
         {
             if (name.empty()) return make<bind_object<Windows::Foundation::Uri>>(object);
             if (name == L"Domain") return box_value(object.Domain());
@@ -18,7 +18,7 @@ namespace winrt::impl
             return nullptr;
         }
 
-        void set(Windows::Foundation::Uri const& object, Windows::Foundation::IInspectable const& value) const
+        void set(Windows::Foundation::Uri const& object, hstring const& , Windows::Foundation::IInspectable const& value) const
         {
             object;
             value;
@@ -30,7 +30,7 @@ namespace winrt::impl
     {
         hstring name;
 
-        Windows::Foundation::IInspectable get(Windows::Foundation::Numerics::float3 const& object) const
+        Windows::Foundation::IInspectable get(Windows::Foundation::Numerics::float3 const& object, hstring const&) const
         {
             // TODO: somehow overload box_value or add a bind_value helper that does make<bind_object... or box_value as necessary
 
@@ -42,7 +42,7 @@ namespace winrt::impl
             return nullptr;
         }
 
-        void set(Windows::Foundation::Numerics::float3 const& object, Windows::Foundation::IInspectable const& value) const
+        void set(Windows::Foundation::Numerics::float3 const& object, hstring const&, Windows::Foundation::IInspectable const& value) const
         {
             object;
             value;
@@ -54,7 +54,7 @@ namespace winrt::impl
     {
         hstring name;
 
-        Windows::Foundation::IInspectable get(Windows::UI::Composition::SpriteVisual const& object) const
+        Windows::Foundation::IInspectable get(Windows::UI::Composition::SpriteVisual const& object, hstring const&) const
         {
             if (name.empty()) return make<bind_object<Windows::UI::Composition::SpriteVisual>>(object);
             if (name == L"Offset") return make<bind_object<Windows::Foundation::Numerics::float3>>(object.Offset());
@@ -63,14 +63,13 @@ namespace winrt::impl
             return nullptr;
         }
 
-        void set(Windows::UI::Composition::SpriteVisual const& object, Windows::Foundation::IInspectable const& value) const
+        void set(Windows::UI::Composition::SpriteVisual const& object, hstring const&, Windows::Foundation::IInspectable const& value) const
         {
             if (name == L"Comment") { object.Comment(unbox_value<hstring>(value)); return; };
             WINRT_ASSERT(false);
         }
     };
 }
-
 
 using namespace std::literals;
 using namespace winrt;

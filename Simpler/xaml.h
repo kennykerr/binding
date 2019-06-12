@@ -7,12 +7,12 @@ namespace winrt::impl
     template <typename T>
     struct bind_member
     {
-        Windows::Foundation::IInspectable get(T const& object) const
+        Windows::Foundation::IInspectable get(T const& object, hstring const&) const
         {
             return box_value(object);
         }
 
-        void set(T& object, Windows::Foundation::IInspectable const& value) const
+        void set(T& object, hstring const&, Windows::Foundation::IInspectable const& value) const
         {
             object = unbox_value<T>(value);
         }
@@ -44,12 +44,12 @@ namespace winrt::impl
 
         auto GetValue(Windows::Foundation::IInspectable const&) const
         {
-            return m_binding.get(m_property);
+            return m_binding.get(m_property, m_binding.name);
         }
 
         void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const& value) const
         {
-            m_binding.set(m_property, value);
+            m_binding.set(m_property, m_binding.name, value);
             m_object->property_changed(m_binding.name);
         }
 
@@ -227,6 +227,11 @@ namespace winrt
             }
         }
 
+        bool is_compound() const noexcept
+        {
+            return m_accessor && m_accessor->is_compound();
+        }
+
         explicit operator bool() const noexcept
         {
             return static_cast<bool>(m_accessor);
@@ -238,6 +243,7 @@ namespace winrt
         {
             virtual Windows::Foundation::IInspectable get() = 0;
             virtual void set(Windows::Foundation::IInspectable const&) = 0;
+            virtual bool is_compound() const noexcept = 0;
         };
 
         template <typename T>
@@ -251,7 +257,7 @@ namespace winrt
             {
                 if constexpr (impl::has_category_v<T>)
                 {
-                    return m_binding.get(m_value);
+                    return m_binding.get(m_value, {});
                 }
                 else
                 {
@@ -263,8 +269,13 @@ namespace winrt
             {
                 if constexpr (impl::has_category_v<T>)
                 {
-                    m_binding.set(m_value, value);
+                    m_binding.set(m_value, {}, value);
                 }
+            }
+
+            bool is_compound() const noexcept final
+            {
+                return std::is_compound_v<T>;
             }
 
             int32_t __stdcall QueryInterface(guid const&, void** result) noexcept final
@@ -384,7 +395,7 @@ namespace winrt
 
             Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const&)
             {
-                if (m_value == nullptr)
+                if (!m_binding.is_compound() || m_value == nullptr)
                 {
                     m_value = m_binding.get();
                 }
