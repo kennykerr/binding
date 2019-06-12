@@ -67,6 +67,17 @@ namespace winrt::impl
     };
 }
 
+namespace winrt
+{
+    xaml_binding bind(Windows::Foundation::Numerics::float3& object, hstring const& name)
+    {
+        if (name == L"x") return object.x;
+        if (name == L"y") return object.y;
+        if (name == L"z") return object.z;
+        return {};
+    }
+}
+
 using namespace std::literals;
 using namespace winrt;
 using namespace Windows::Foundation;

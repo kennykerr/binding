@@ -4,7 +4,7 @@
 
 namespace winrt::impl
 {
-    template <typename T>
+    template <typename T> // enable_if T is hstring or enum or fundamental
     struct bind_member
     {
         static Windows::Foundation::IInspectable get(T const& object, hstring const&)
@@ -28,28 +28,165 @@ namespace winrt::impl
 
         static constexpr bool value = get_value<T>(0);
     };
+}
 
+namespace winrt
+{
+    // Type returned by winrt::bind function to provide type inference
+    struct xaml_binding
+    {
+        xaml_binding() noexcept {}
+
+        template <typename T>
+        xaml_binding(T& value, hstring name = {}) : m_accessor{ new accessor<T>(value, name), take_ownership_from_abi }
+        {
+        }
+
+        Windows::Foundation::IInspectable get() const
+        {
+            if (m_accessor)
+            {
+                return m_accessor->get();
+            }
+
+            return {};
+        }
+
+        void set(Windows::Foundation::IInspectable const& value) const
+        {
+            if (m_accessor)
+            {
+                m_accessor->set(value);
+            }
+        }
+
+        bool is_compound() const noexcept
+        {
+            return m_accessor && m_accessor->is_compound();
+        }
+
+        explicit operator bool() const noexcept
+        {
+            return static_cast<bool>(m_accessor);
+        }
+
+    private:
+
+        struct accessor_abi : impl::unknown_abi
+        {
+            virtual Windows::Foundation::IInspectable get() = 0;
+            virtual void set(Windows::Foundation::IInspectable const&) = 0;
+            virtual bool is_compound() const noexcept = 0;
+        };
+
+        template <typename T>
+        struct accessor final : accessor_abi
+        {
+            accessor(T& value, hstring const& name) : m_value(value), m_name(name)
+            {
+            }
+
+            Windows::Foundation::IInspectable get() final
+            {
+                if constexpr (impl::has_category_v<T>)
+                {
+                    return impl::bind_member<T>::get(m_value, m_name);
+                }
+                else
+                {
+                    return {};
+                }
+            }
+
+            void set([[maybe_unused]] Windows::Foundation::IInspectable const& value) final
+            {
+                if constexpr (impl::has_category_v<T>)
+                {
+                    impl::bind_member<T>::set(m_value, m_name, value);
+                }
+            }
+
+            bool is_compound() const noexcept final
+            {
+                return std::is_compound_v<T>;
+            }
+
+            int32_t __stdcall QueryInterface(guid const&, void** result) noexcept final
+            {
+                *result = nullptr;
+                return impl::error_no_interface;
+            }
+
+            uint32_t __stdcall AddRef() noexcept final
+            {
+                return 1 + m_references.fetch_add(1, std::memory_order_relaxed);
+            }
+
+            uint32_t __stdcall Release() noexcept final
+            {
+                uint32_t const target = m_references.fetch_sub(1, std::memory_order_release) - 1;
+
+                if (target == 0)
+                {
+                    std::atomic_thread_fence(std::memory_order_acquire);
+                    delete this;
+                }
+
+                return target;
+            }
+
+        private:
+
+            std::atomic<uint32_t> m_references{ 1 };
+            T& m_value;
+            hstring const m_name;
+        };
+
+        com_ptr<accessor_abi> m_accessor;
+    };
+
+    // In winrt namespace so that developers can overload bind
+    template <typename T>
+    auto bind(T&& object, hstring const& name)
+    {
+        if constexpr (impl::has_bind<T>::value)
+        {
+            return object.bind(name);
+        }
+        else
+        {
+            return xaml_binding(object, name);
+        }
+    }
+}
+
+namespace winrt::impl
+{
     template <typename T>
     struct bind_object;
 
+    // TODO: bind_property needs to rely on xaml_binding to support bind free functions
     template <typename T>
     struct bind_property : implements<bind_property<T>, Windows::UI::Xaml::Data::ICustomProperty>
     {
-        bind_property(com_ptr<bind_object<T>>&& object, T const& property, hstring const& name) :
+        bind_property(com_ptr<bind_object<T>>&& object, T& property, hstring const& name) :
             m_object(std::move(object)),
             m_property(property),
-            m_name(name)
+            m_name(name),
+            m_binding{ bind(m_property, m_name) }
         {
         }
 
         auto GetValue(Windows::Foundation::IInspectable const&) const
         {
-            return bind_member<T>::get(m_property, m_name);
+            return m_binding.get();
+            //return bind_member<T>::get(m_property, m_name);
         }
 
         void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const& value)
         {
-            bind_member<T>::set(m_property, m_name, value);
+            m_binding.set(value);
+            //bind_member<T>::set(m_property, m_name, value);
             m_object->property_changed(m_name);
         }
 
@@ -86,6 +223,7 @@ namespace winrt::impl
         com_ptr<bind_object<T>> m_object;
         T m_property;
         hstring m_name;
+        xaml_binding m_binding;
     };
 
     template <typename T>
@@ -192,125 +330,6 @@ namespace winrt::impl
 
 namespace winrt
 {
-    // In winrt namespace so that developers can overload bind
-    template <typename T, std::enable_if_t<impl::has_bind<T>::value, int> = 0>
-    auto bind(T&& object, hstring const& name)
-    {
-        return object.bind(name);
-    }
-
-    // Type returned by winrt::bind function to provide type inference
-    struct xaml_binding
-    {
-        xaml_binding() noexcept {}
-
-        template <typename T>
-        xaml_binding(T& value) : m_accessor{ new accessor<T>(value), take_ownership_from_abi }
-        {
-        }
-
-        Windows::Foundation::IInspectable get() const
-        {
-            if (m_accessor)
-            {
-                return m_accessor->get();
-            }
-
-            return {};
-        }
-
-        void set(Windows::Foundation::IInspectable const& value) const
-        {
-            if (m_accessor)
-            {
-                m_accessor->set(value);
-            }
-        }
-
-        bool is_compound() const noexcept
-        {
-            return m_accessor && m_accessor->is_compound();
-        }
-
-        explicit operator bool() const noexcept
-        {
-            return static_cast<bool>(m_accessor);
-        }
-
-    private:
-
-        struct accessor_abi : impl::unknown_abi
-        {
-            virtual Windows::Foundation::IInspectable get() = 0;
-            virtual void set(Windows::Foundation::IInspectable const&) = 0;
-            virtual bool is_compound() const noexcept = 0;
-        };
-
-        template <typename T>
-        struct accessor final : accessor_abi
-        {
-            accessor(T& value) : m_value(value)
-            {
-            }
-
-            Windows::Foundation::IInspectable get() final
-            {
-                if constexpr (impl::has_category_v<T>)
-                {
-                    return impl::bind_member<T>::get(m_value, {});
-                }
-                else
-                {
-                    return {};
-                }
-            }
-
-            void set([[maybe_unused]] Windows::Foundation::IInspectable const& value) final
-            {
-                if constexpr (impl::has_category_v<T>)
-                {
-                    impl::bind_member<T>::set(m_value, {}, value);
-                }
-            }
-
-            bool is_compound() const noexcept final
-            {
-                return std::is_compound_v<T>;
-            }
-
-            int32_t __stdcall QueryInterface(guid const&, void** result) noexcept final
-            {
-                *result = nullptr;
-                return impl::error_no_interface;
-            }
-
-            uint32_t __stdcall AddRef() noexcept final
-            {
-                return 1 + m_references.fetch_add(1, std::memory_order_relaxed);
-            }
-
-            uint32_t __stdcall Release() noexcept final
-            {
-                uint32_t const target = m_references.fetch_sub(1, std::memory_order_release) - 1;
-
-                if (target == 0)
-                {
-                    std::atomic_thread_fence(std::memory_order_acquire);
-                    delete this;
-                }
-
-                return target;
-            }
-
-        private:
-
-            std::atomic<uint32_t> m_references{ 1 };
-            T& m_value;
-        };
-
-        com_ptr<accessor_abi> m_accessor;
-    };
-
     template <typename D, bool Register = true>
     struct xaml_registration
     {
