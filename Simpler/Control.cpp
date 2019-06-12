@@ -25,6 +25,50 @@ namespace winrt::impl
             WINRT_ASSERT(false);
         }
     };
+
+    template <> struct bind_member<Windows::Foundation::Numerics::float3>
+    {
+        hstring name;
+
+        Windows::Foundation::IInspectable get(Windows::Foundation::Numerics::float3 const& object) const
+        {
+            // TODO: somehow overload box_value or add a bind_value helper that does make<bind_object if necessary
+
+            if (name.empty()) return make<bind_object<Windows::Foundation::Numerics::float3>>(object);
+            if (name == L"x") return box_value(object.x);
+            if (name == L"y") return box_value(object.y);
+            if (name == L"z") return box_value(object.z);
+            WINRT_ASSERT(false);
+            return nullptr;
+        }
+
+        void set(Windows::Foundation::Numerics::float3 const& object, Windows::Foundation::IInspectable const& value) const
+        {
+            object;
+            value;
+            WINRT_ASSERT(false);
+        }
+    };
+
+    template <> struct bind_member<Windows::UI::Composition::SpriteVisual>
+    {
+        hstring name;
+
+        Windows::Foundation::IInspectable get(Windows::UI::Composition::SpriteVisual const& object) const
+        {
+            if (name.empty()) return make<bind_object<Windows::UI::Composition::SpriteVisual>>(object);
+            if (name == L"Offset") return make<bind_object<Windows::Foundation::Numerics::float3>>(object.Offset());
+            WINRT_ASSERT(false);
+            return nullptr;
+        }
+
+        void set(Windows::UI::Composition::SpriteVisual const& object, Windows::Foundation::IInspectable const& value) const
+        {
+            object;
+            value;
+            WINRT_ASSERT(false);
+        }
+    };
 }
 
 
@@ -33,8 +77,7 @@ using namespace winrt;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::UI::Xaml::Controls;
-
-
+using namespace Windows::UI::Composition;
 
 //namespace winrt
 //{
@@ -67,6 +110,7 @@ struct SampleControl : xaml_user_control<SampleControl>
     IObservableVector<int> m_list{ single_threaded_observable_vector<int>() };
     Uri m_uri{ L"http://kennykerr.ca/about" };
     //MemberSample m_member;
+    SpriteVisual m_visual{ nullptr };
 
     static hstring type_name()
     {
@@ -90,11 +134,20 @@ struct SampleControl : xaml_user_control<SampleControl>
             return m_text;
         }
 
+        if (name == L"Visual")
+        {
+            return m_visual;
+        }
+
         return {};
     }
 
     SampleControl() : base_type(L"ms-appx:///Control.xaml")
     {
+        Compositor compositor;
+        m_visual = compositor.CreateSpriteVisual();
+        m_visual.Offset({ 12, 23, 0 });
+
         DataContext(*this);
 
         Loaded([&](auto && ...)

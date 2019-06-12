@@ -5,6 +5,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <TextBlock
@@ -24,5 +25,9 @@
             FontSize="48"
             IsReadOnly="true"
             Text="{Binding Text}" />
+        <TextBlock
+            Grid.Row="4"
+            FontSize="48"
+            Text="{Binding Visual.Offset.x}" />
     </Grid>
 </UserControl>
