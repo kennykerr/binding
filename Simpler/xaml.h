@@ -7,12 +7,12 @@ namespace winrt::impl
     template <typename T>
     struct bind_member
     {
-        Windows::Foundation::IInspectable get(T const& object, hstring const&) const
+        static Windows::Foundation::IInspectable get(T const& object, hstring const&)
         {
             return box_value(object);
         }
 
-        void set(T& object, hstring const&, Windows::Foundation::IInspectable const& value) const
+        static void set(T& object, hstring const&, Windows::Foundation::IInspectable const& value)
         {
             object = unbox_value<T>(value);
         }
@@ -38,19 +38,19 @@ namespace winrt::impl
         bind_property(com_ptr<bind_object<T>>&& object, T const& property, hstring const& name) :
             m_object(std::move(object)),
             m_property(property),
-            m_binding{ name }
+            m_name(name)
         {
         }
 
         auto GetValue(Windows::Foundation::IInspectable const&) const
         {
-            return m_binding.get(m_property, m_binding.name);
+            return bind_member<T>::get(m_property, m_name);
         }
 
         void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const& value) const
         {
-            m_binding.set(m_property, m_binding.name, value);
-            m_object->property_changed(m_binding.name);
+            bind_member<T>::set(m_property, m_name, value);
+            m_object->property_changed(m_name);
         }
 
         bool CanWrite() const noexcept
@@ -85,7 +85,7 @@ namespace winrt::impl
     private:
         com_ptr<bind_object<T>> m_object;
         T m_property;
-        bind_member<T> m_binding;
+        hstring m_name;
     };
 
     template <typename T>
@@ -257,7 +257,7 @@ namespace winrt
             {
                 if constexpr (impl::has_category_v<T>)
                 {
-                    return m_binding.get(m_value, {});
+                    return impl::bind_member<T>::get(m_value, {});
                 }
                 else
                 {
@@ -269,7 +269,7 @@ namespace winrt
             {
                 if constexpr (impl::has_category_v<T>)
                 {
-                    m_binding.set(m_value, {}, value);
+                    impl::bind_member<T>::set(m_value, {}, value);
                 }
             }
 
@@ -306,7 +306,6 @@ namespace winrt
 
             std::atomic<uint32_t> m_references{ 1 };
             T& m_value;
-            impl::bind_member<T> m_binding;
         };
 
         com_ptr<accessor_abi> m_accessor;

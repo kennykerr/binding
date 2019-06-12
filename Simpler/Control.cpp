@@ -7,9 +7,7 @@ namespace winrt::impl
 
     template <> struct bind_member<Windows::Foundation::Uri>
     {
-        hstring name;
-
-        Windows::Foundation::IInspectable get(Windows::Foundation::Uri const& object, hstring const&) const
+        static Windows::Foundation::IInspectable get(Windows::Foundation::Uri const& object, hstring const& name)
         {
             if (name.empty()) return make<bind_object<Windows::Foundation::Uri>>(object);
             if (name == L"Domain") return box_value(object.Domain());
@@ -18,9 +16,10 @@ namespace winrt::impl
             return nullptr;
         }
 
-        void set(Windows::Foundation::Uri const& object, hstring const& , Windows::Foundation::IInspectable const& value) const
+        static void set(Windows::Foundation::Uri const& object, hstring const& name, Windows::Foundation::IInspectable const& value)
         {
             object;
+            name;
             value;
             WINRT_ASSERT(false);
         }
@@ -28,9 +27,7 @@ namespace winrt::impl
 
     template <> struct bind_member<Windows::Foundation::Numerics::float3>
     {
-        hstring name;
-
-        Windows::Foundation::IInspectable get(Windows::Foundation::Numerics::float3 const& object, hstring const&) const
+        static Windows::Foundation::IInspectable get(Windows::Foundation::Numerics::float3 const& object, hstring const& name)
         {
             // TODO: somehow overload box_value or add a bind_value helper that does make<bind_object... or box_value as necessary
 
@@ -42,9 +39,10 @@ namespace winrt::impl
             return nullptr;
         }
 
-        void set(Windows::Foundation::Numerics::float3 const& object, hstring const&, Windows::Foundation::IInspectable const& value) const
+        static void set(Windows::Foundation::Numerics::float3 const& object, hstring const& name, Windows::Foundation::IInspectable const& value)
         {
             object;
+            name;
             value;
             WINRT_ASSERT(false);
         }
@@ -52,9 +50,7 @@ namespace winrt::impl
 
     template <> struct bind_member<Windows::UI::Composition::SpriteVisual>
     {
-        hstring name;
-
-        Windows::Foundation::IInspectable get(Windows::UI::Composition::SpriteVisual const& object, hstring const&) const
+        static Windows::Foundation::IInspectable get(Windows::UI::Composition::SpriteVisual const& object, hstring const& name)
         {
             if (name.empty()) return make<bind_object<Windows::UI::Composition::SpriteVisual>>(object);
             if (name == L"Offset") return make<bind_object<Windows::Foundation::Numerics::float3>>(object.Offset());
@@ -63,7 +59,7 @@ namespace winrt::impl
             return nullptr;
         }
 
-        void set(Windows::UI::Composition::SpriteVisual const& object, hstring const&, Windows::Foundation::IInspectable const& value) const
+        static void set(Windows::UI::Composition::SpriteVisual const& object, hstring const& name, Windows::Foundation::IInspectable const& value)
         {
             if (name == L"Comment") { object.Comment(unbox_value<hstring>(value)); return; };
             WINRT_ASSERT(false);
