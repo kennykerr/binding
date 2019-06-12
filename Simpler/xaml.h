@@ -4,7 +4,7 @@
 
 namespace winrt::impl
 {
-    template <typename T> // enable_if T is hstring or enum or fundamental
+    template <typename T>
     struct bind_member
     {
         static Windows::Foundation::IInspectable get(T const& object, hstring const&)
@@ -38,7 +38,12 @@ namespace winrt
         xaml_binding() noexcept {}
 
         template <typename T>
-        xaml_binding(T& value, hstring name = {}) : m_accessor{ new accessor<T>(value, name), take_ownership_from_abi }
+        xaml_binding(T& value) : m_accessor{ new accessor<T>(value), take_ownership_from_abi }
+        {
+        }
+
+        template <typename T>
+        xaml_binding(T& value, hstring const& name) : m_accessor{ new accessor<T>(value, name), take_ownership_from_abi }
         {
         }
 
@@ -82,6 +87,10 @@ namespace winrt
         template <typename T>
         struct accessor final : accessor_abi
         {
+            accessor(T& value) : m_value(value)
+            {
+            }
+
             accessor(T& value, hstring const& name) : m_value(value), m_name(name)
             {
             }
@@ -165,7 +174,6 @@ namespace winrt::impl
     template <typename T>
     struct bind_object;
 
-    // TODO: bind_property needs to rely on xaml_binding to support bind free functions
     template <typename T>
     struct bind_property : implements<bind_property<T>, Windows::UI::Xaml::Data::ICustomProperty>
     {
@@ -180,13 +188,11 @@ namespace winrt::impl
         auto GetValue(Windows::Foundation::IInspectable const&) const
         {
             return m_binding.get();
-            //return bind_member<T>::get(m_property, m_name);
         }
 
         void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const& value)
         {
             m_binding.set(value);
-            //bind_member<T>::set(m_property, m_name, value);
             m_object->property_changed(m_name);
         }
 
