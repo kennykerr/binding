@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "xaml.h"
+#include "winrt/Windows.UI.Xaml.Hosting.h"
 
 namespace winrt::impl
 {
@@ -82,7 +83,9 @@ using namespace std::literals;
 using namespace winrt;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
+using namespace Windows::UI;
 using namespace Windows::UI::Xaml::Controls;
+using namespace Windows::UI::Xaml::Hosting;
 using namespace Windows::UI::Composition;
 
 struct SampleControl : xaml_user_control<SampleControl>
@@ -125,9 +128,11 @@ struct SampleControl : xaml_user_control<SampleControl>
 
     SampleControl() : base_type(L"ms-appx:///Control.xaml")
     {
-        Compositor compositor;
+        auto compositor = ElementCompositionPreview::GetElementVisual(*this).Compositor();
         m_visual = compositor.CreateSpriteVisual();
-        m_visual.Offset({ 12, 23, 0 });
+        m_visual.Brush(compositor.CreateColorBrush({ 128, 255, 0, 0 }));
+        m_visual.Size({ 100,100 });
+        ElementCompositionPreview::SetElementChildVisual(*this, m_visual);
         m_visual.Comment(L"Default");
 
         DataContext(*this);
