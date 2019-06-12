@@ -382,15 +382,19 @@ namespace winrt
             {
             }
 
-            Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const& object)
+            Windows::Foundation::IInspectable GetValue(Windows::Foundation::IInspectable const&)
             {
-                resolve(object);
-                return m_binding.get();
+                if (m_value == nullptr)
+                {
+                    m_value = m_binding.get();
+                }
+
+                return m_value;
             }
 
-            void SetValue(Windows::Foundation::IInspectable const& object, Windows::Foundation::IInspectable const& value)
+            void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const& value)
             {
-                resolve(object);
+                m_value = nullptr;
                 m_binding.set(value);
                 m_object->property_changed(m_name);
             }
@@ -427,14 +431,10 @@ namespace winrt
 
         private:
 
-            void resolve(Windows::Foundation::IInspectable const&)
-            {
-                // don't rely on static?
-            }
-
             com_ptr<D> m_object;
             hstring const m_name;
             xaml_binding m_binding;
+            Windows::Foundation::IInspectable m_value;
         };
 
         struct xaml_type_instance : implements<xaml_type_instance, Windows::UI::Xaml::Markup::IXamlType>
@@ -471,7 +471,14 @@ namespace winrt
 
             Windows::UI::Xaml::Markup::IXamlMember GetMember(hstring const& name) const
             {
-                return make<xaml_member>(s_last_type->get_strong(), name);
+                static std::map<hstring, Windows::UI::Xaml::Markup::IXamlMember> members;
+
+                if (members.contains(name))
+                {
+                    return members[name];
+                }
+
+                return members[name] = make<xaml_member>(s_last_type->get_strong(), name);
             }
 
             Windows::UI::Xaml::Markup::IXamlMember ContentProperty() const noexcept { return {}; }
