@@ -25,6 +25,24 @@ namespace winrt::impl
         }
     };
 
+    template <> struct bind_member<Windows::UI::Composition::SpriteVisual>
+    {
+        static Windows::Foundation::IInspectable get(Windows::UI::Composition::SpriteVisual const& object, hstring const& name)
+        {
+            if (name.empty()) return make<bind_object<Windows::UI::Composition::SpriteVisual>>(object);
+            if (name == L"Offset") return make<bind_object<Windows::Foundation::Numerics::float3>>(object.Offset());
+            if (name == L"Comment") return box_value(object.Comment());
+            WINRT_ASSERT(false);
+            return nullptr;
+        }
+
+        static void set(Windows::UI::Composition::SpriteVisual const& object, hstring const& name, Windows::Foundation::IInspectable const& value)
+        {
+            if (name == L"Comment") { object.Comment(unbox_value<hstring>(value)); return; };
+            WINRT_ASSERT(false);
+        }
+    };
+
     template <> struct bind_member<Windows::Foundation::Numerics::float3>
     {
         static Windows::Foundation::IInspectable get(Windows::Foundation::Numerics::float3 const& object, hstring const& name)
@@ -44,24 +62,6 @@ namespace winrt::impl
             object;
             name;
             value;
-            WINRT_ASSERT(false);
-        }
-    };
-
-    template <> struct bind_member<Windows::UI::Composition::SpriteVisual>
-    {
-        static Windows::Foundation::IInspectable get(Windows::UI::Composition::SpriteVisual const& object, hstring const& name)
-        {
-            if (name.empty()) return make<bind_object<Windows::UI::Composition::SpriteVisual>>(object);
-            if (name == L"Offset") return make<bind_object<Windows::Foundation::Numerics::float3>>(object.Offset());
-            if (name == L"Comment") return box_value(object.Comment());
-            WINRT_ASSERT(false);
-            return nullptr;
-        }
-
-        static void set(Windows::UI::Composition::SpriteVisual const& object, hstring const& name, Windows::Foundation::IInspectable const& value)
-        {
-            if (name == L"Comment") { object.Comment(unbox_value<hstring>(value)); return; };
             WINRT_ASSERT(false);
         }
     };

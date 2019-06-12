@@ -47,7 +47,7 @@ namespace winrt::impl
             return bind_member<T>::get(m_property, m_name);
         }
 
-        void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const& value) const
+        void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const& value)
         {
             bind_member<T>::set(m_property, m_name, value);
             m_object->property_changed(m_name);
