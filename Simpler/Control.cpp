@@ -31,7 +31,11 @@ namespace winrt::impl
         static Windows::Foundation::IInspectable get(Windows::UI::Composition::SpriteVisual const& object, hstring const& name)
         {
             if (name.empty()) return make<bind_object<Windows::UI::Composition::SpriteVisual>>(object);
+
+            // TODO: because Offset is a struct, the bind_object must take a Setter and carry it along so that any 
+            // call to "set" to update a field also calls the Setter to update the owning object.
             if (name == L"Offset") return make<bind_object<Windows::Foundation::Numerics::float3>>(object.Offset());
+
             if (name == L"Comment") return box_value(object.Comment());
             WINRT_ASSERT(false);
             return nullptr;
@@ -58,26 +62,24 @@ namespace winrt::impl
             return nullptr;
         }
 
-        static void set(Windows::Foundation::Numerics::float3 const& object, hstring const& name, Windows::Foundation::IInspectable const& value)
+        static void set(Windows::Foundation::Numerics::float3& object, hstring const& name, Windows::Foundation::IInspectable const& value)
         {
-            object;
-            name;
-            value;
+            if (name == L"x") { object.x = unbox_value<float>(value); return; };
             WINRT_ASSERT(false);
         }
     };
 }
 
-namespace winrt
-{
-    xaml_binding bind(Windows::Foundation::Numerics::float3& object, hstring const& name)
-    {
-        if (name == L"x") return object.x;
-        if (name == L"y") return object.y;
-        if (name == L"z") return object.z;
-        return {};
-    }
-}
+//namespace winrt
+//{
+//    xaml_binding bind(Windows::Foundation::Numerics::float3& object, hstring const& name)
+//    {
+//        if (name == L"x") return object.x;
+//        if (name == L"y") return object.y;
+//        if (name == L"z") return object.z;
+//        return {};
+//    }
+//}
 
 using namespace std::literals;
 using namespace winrt;
@@ -87,6 +89,24 @@ using namespace Windows::UI;
 using namespace Windows::UI::Xaml::Controls;
 using namespace Windows::UI::Xaml::Hosting;
 using namespace Windows::UI::Composition;
+
+struct StringToFloatConverter : registered_implements<StringToFloatConverter, Windows::UI::Xaml::Data::IValueConverter>
+{
+    static hstring type_name()
+    {
+        return L"Sample.StringToFloatConverter";
+    }
+
+    auto Convert(Windows::Foundation::IInspectable const& value, Windows::UI::Xaml::Interop::TypeName const&, Windows::Foundation::IInspectable const&, param::hstring const&) const
+    {
+        return value;
+    }
+
+    auto ConvertBack(Windows::Foundation::IInspectable const& value, Windows::UI::Xaml::Interop::TypeName const&, Windows::Foundation::IInspectable const&, param::hstring const&) const
+    {
+        return box_value(std::stof(std::wstring(unbox_value<hstring>(value))));
+    }
+};
 
 struct SampleControl : xaml_user_control<SampleControl>
 {

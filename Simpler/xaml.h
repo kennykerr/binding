@@ -508,9 +508,11 @@ namespace winrt
             {
                 static std::map<hstring, Windows::UI::Xaml::Markup::IXamlMember> members;
 
-                if (members.contains(name))
+                auto found = members.find(name);
+
+                if (found != members.end())
                 {
-                    return members[name];
+                    return found->second;
                 }
 
                 return members[name] = make<xaml_member>(s_last_type->get_strong(), name);
@@ -542,6 +544,83 @@ namespace winrt
 
         event<Windows::UI::Xaml::Data::PropertyChangedEventHandler> m_changed;
     };
+
+    // -----------------
+
+    template <typename D, typename... I>
+    struct registered_implements : implements<D, I...>, xaml_registration<D, true>
+    {
+        static Windows::UI::Xaml::Markup::IXamlType get_type()
+        {
+            return make<xaml_type_instance>();
+        }
+
+        static hstring GetRuntimeClassName()
+        {
+            return D::type_name();
+        }
+
+    private:
+
+        struct xaml_type_instance : implements<xaml_type_instance, Windows::UI::Xaml::Markup::IXamlType>
+        {
+            hstring FullName() const
+            {
+                return D::GetRuntimeClassName();
+            }
+
+            Windows::Foundation::IInspectable ActivateInstance() const
+            {
+                return make<D>();
+            }
+
+            Windows::UI::Xaml::Markup::IXamlType BaseType() const
+            {
+                return nullptr;
+            }
+
+            bool IsConstructible() const
+            {
+                return true;
+            }
+
+            Windows::UI::Xaml::Interop::TypeName UnderlyingType() const
+            {
+                return {};
+            }
+
+            bool IsBindable() const
+            {
+                return true;
+            }
+
+            Windows::UI::Xaml::Markup::IXamlMember GetMember(hstring const& name) const
+            {
+                name;
+                return nullptr;
+            }
+
+            Windows::UI::Xaml::Markup::IXamlMember ContentProperty() const noexcept { return {}; }
+            bool IsArray() const noexcept { return {}; }
+            bool IsCollection() const noexcept { return {}; }
+            bool IsDictionary() const noexcept { return {}; }
+            bool IsMarkupExtension() const noexcept { return {}; }
+            Windows::UI::Xaml::Markup::IXamlType ItemType() const noexcept { return {}; }
+            Windows::UI::Xaml::Markup::IXamlType KeyType() const noexcept { return {}; }
+
+            Windows::Foundation::IInspectable CreateFromString(hstring const& value) const noexcept
+            {
+                value;
+                return {};
+            }
+
+            void AddToVector(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept { }
+            void AddToMap(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept { }
+            void RunInitializer() const noexcept { }
+        };
+    };
+
+    // -----------------
 
     template <typename D, typename... I>
     using xaml_page = xaml_type<D, false, Windows::UI::Xaml::Controls::PageT, I...>;

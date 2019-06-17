@@ -132,7 +132,7 @@
       <AdditionalIncludeDirectories>C:\git\xlang\_build\Windows\x64\Debug\tool\cppwinrt\;$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
     </ClCompile>
@@ -164,7 +164,7 @@
       <AdditionalIncludeDirectories>C:\git\xlang\_build\Windows\x64\Debug\tool\cppwinrt\;$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
     </ClCompile>
@@ -195,7 +195,7 @@
       <AdditionalIncludeDirectories>C:\git\xlang\_build\Windows\x64\Debug\tool\cppwinrt\;$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
     </ClCompile>
@@ -227,7 +227,7 @@
       <AdditionalIncludeDirectories>C:\git\xlang\_build\Windows\x64\Debug\tool\cppwinrt\;$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
     </ClCompile>
@@ -258,7 +258,7 @@
       <AdditionalIncludeDirectories>C:\git\xlang\_build\Windows\x64\Debug\tool\cppwinrt\;$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
     </ClCompile>
@@ -290,7 +290,7 @@
       <AdditionalIncludeDirectories>C:\git\xlang\_build\Windows\x64\Debug\tool\cppwinrt\;$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
     </ClCompile>
