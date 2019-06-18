@@ -208,7 +208,7 @@ namespace winrt::impl
 
         Windows::UI::Xaml::Interop::TypeName Type() const noexcept
         {
-            return {};
+            return xaml_typename<float>();
         }
 
         hstring Name() const noexcept
@@ -272,7 +272,7 @@ namespace winrt::impl
 
         Windows::UI::Xaml::Interop::TypeName Type() const noexcept
         {
-            return {};
+            return xaml_typename<float>();
         }
 
     private:

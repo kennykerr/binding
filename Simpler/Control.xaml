@@ -45,7 +45,7 @@
         <TextBox
             Grid.Row="6"
             FontSize="48"
-            Text="{Binding Visual.Offset.x, Mode=TwoWay, Converter={StaticResource StringToFloatConverter}}" />
+            Text="{Binding Visual.Offset.x, Mode=TwoWay}" />
         <TextBox
             Grid.Row="7"
             FontSize="48"
