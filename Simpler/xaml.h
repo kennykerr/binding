@@ -177,11 +177,12 @@ namespace winrt::impl
     template <typename T>
     struct bind_property : implements<bind_property<T>, Windows::UI::Xaml::Data::ICustomProperty>
     {
-        bind_property(com_ptr<bind_object<T>>&& object, T& property, hstring const& name) :
+        bind_property(com_ptr<bind_object<T>>&& object, T& property, hstring const& name, winrt::delegate<T const&> const& update) :
             m_object(std::move(object)),
             m_property(property),
             m_name(name),
-            m_binding{ bind(m_property, m_name) }
+            m_binding{ bind(m_property, m_name) },
+            m_update(update)
         {
         }
 
@@ -193,6 +194,12 @@ namespace winrt::impl
         void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const& value)
         {
             m_binding.set(value);
+
+            if (m_update)
+            {
+                m_update(m_property);
+            }
+
             m_object->property_changed(m_name);
         }
 
@@ -208,7 +215,7 @@ namespace winrt::impl
 
         Windows::UI::Xaml::Interop::TypeName Type() const noexcept
         {
-            return xaml_typename<float>();
+            return xaml_typename<T>();
         }
 
         hstring Name() const noexcept
@@ -230,13 +237,15 @@ namespace winrt::impl
         T m_property;
         hstring m_name;
         xaml_binding m_binding;
+        winrt::delegate<T const&> m_update;
     };
 
     template <typename T>
     struct bind_object : implements<bind_object<T>, Windows::UI::Xaml::Data::ICustomPropertyProvider, Windows::UI::Xaml::Data::INotifyPropertyChanged>
     {
-        bind_object(T const& object) :
-            m_object(object)
+        bind_object(T const& object, winrt::delegate<T const&> const& update = nullptr) :
+            m_object(object),
+            m_update(update)
         {
         }
 
@@ -257,7 +266,7 @@ namespace winrt::impl
 
         Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& member)
         {
-            return make<bind_property<T>>(get_strong(), m_object, member);
+            return make<bind_property<T>>(get_strong(), m_object, member, m_update);
         }
 
         Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const&, Windows::UI::Xaml::Interop::TypeName const&) const noexcept
@@ -272,12 +281,13 @@ namespace winrt::impl
 
         Windows::UI::Xaml::Interop::TypeName Type() const noexcept
         {
-            return xaml_typename<float>();
+            return xaml_typename<T>();
         }
 
     private:
         T m_object;
         event<Windows::UI::Xaml::Data::PropertyChangedEventHandler> m_changed;
+        winrt::delegate<T const&> m_update;
     };
 
     struct xaml_registry

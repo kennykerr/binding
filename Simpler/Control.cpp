@@ -34,7 +34,11 @@ namespace winrt::impl
 
             // TODO: because Offset is a struct, the bind_object must take a Setter and carry it along so that any 
             // call to "set" to update a field also calls the Setter to update the owning object.
-            if (name == L"Offset") return make<bind_object<Windows::Foundation::Numerics::float3>>(object.Offset());
+            // Also maybe don't need to implement INotifyPropertyChanged on these?
+
+            // TODO: just let bind_object take an optional delegate<void(T const)> !!!
+
+            if (name == L"Offset") return make<bind_object<Windows::Foundation::Numerics::float3>>(object.Offset(), [object](auto&& value) { object.Offset(value); });
 
             if (name == L"Comment") return box_value(object.Comment());
             WINRT_ASSERT(false);
