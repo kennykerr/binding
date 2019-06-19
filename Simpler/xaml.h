@@ -65,6 +65,16 @@ namespace winrt
             }
         }
 
+        Windows::UI::Xaml::Interop::TypeName type() const
+        {
+            if (m_accessor)
+            {
+                return m_accessor->type();
+            }
+
+            return {};
+        }
+
         bool is_compound() const noexcept
         {
             return m_accessor && m_accessor->is_compound();
@@ -81,6 +91,7 @@ namespace winrt
         {
             virtual Windows::Foundation::IInspectable get() = 0;
             virtual void set(Windows::Foundation::IInspectable const&) = 0;
+            virtual Windows::UI::Xaml::Interop::TypeName type() const = 0;
             virtual bool is_compound() const noexcept = 0;
         };
 
@@ -113,6 +124,11 @@ namespace winrt
                 {
                     impl::bind_member<T>::set(m_value, m_name, value);
                 }
+            }
+
+            Windows::UI::Xaml::Interop::TypeName type() const final
+            {
+                return xaml_typename<T>();
             }
 
             bool is_compound() const noexcept final
@@ -215,7 +231,7 @@ namespace winrt::impl
 
         Windows::UI::Xaml::Interop::TypeName Type() const noexcept
         {
-            return xaml_typename<T>();
+            return m_binding.type();
         }
 
         hstring Name() const noexcept

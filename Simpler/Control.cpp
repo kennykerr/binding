@@ -52,38 +52,45 @@ namespace winrt::impl
         }
     };
 
-    template <> struct bind_member<Windows::Foundation::Numerics::float3>
-    {
-        static Windows::Foundation::IInspectable get(Windows::Foundation::Numerics::float3 const& object, hstring const& name)
-        {
-            // TODO: somehow overload box_value or add a bind_value helper that does make<bind_object... or box_value as necessary
+    //template <> struct bind_member<Windows::Foundation::Numerics::float3>
+    //{
+    //    static Windows::Foundation::IInspectable get(Windows::Foundation::Numerics::float3 const& object, hstring const& name)
+    //    {
+    //        // TODO: somehow overload box_value or add a bind_value helper that does make<bind_object... or box_value as necessary
 
-            if (name.empty()) return make<bind_object<Windows::Foundation::Numerics::float3>>(object);
-            if (name == L"x") return box_value(object.x);
-            if (name == L"y") return box_value(object.y);
-            if (name == L"z") return box_value(object.z);
-            WINRT_ASSERT(false);
-            return nullptr;
-        }
+    //        if (name.empty()) return make<bind_object<Windows::Foundation::Numerics::float3>>(object);
+    //        if (name == L"x") return box_value(object.x);
+    //        if (name == L"y") return box_value(object.y);
+    //        if (name == L"z") return box_value(object.z);
+    //        WINRT_ASSERT(false);
+    //        return nullptr;
+    //    }
 
-        static void set(Windows::Foundation::Numerics::float3& object, hstring const& name, Windows::Foundation::IInspectable const& value)
-        {
-            if (name == L"x") { object.x = unbox_value<float>(value); return; };
-            WINRT_ASSERT(false);
-        }
-    };
+    //    static void set(Windows::Foundation::Numerics::float3& object, hstring const& name, Windows::Foundation::IInspectable const& value)
+    //    {
+    //        if (name == L"x") { object.x = unbox_value<float>(value); return; };
+    //        WINRT_ASSERT(false);
+    //    }
+    //};
 }
 
-//namespace winrt
-//{
-//    xaml_binding bind(Windows::Foundation::Numerics::float3& object, hstring const& name)
-//    {
-//        if (name == L"x") return object.x;
-//        if (name == L"y") return object.y;
-//        if (name == L"z") return object.z;
-//        return {};
-//    }
-//}
+namespace winrt
+{
+    xaml_binding bind(Windows::Foundation::Numerics::float3& object, hstring const& name)
+    {
+        if (name == L"x") return object.x;
+        if (name == L"y") return object.y;
+        if (name == L"z") return object.z;
+        return {};
+    }
+
+    //xaml_binding bind(Windows::Foundation::Uri const& object, hstring const& name)
+    //{
+    //    if (name == L"Domain") return object.Domain();
+    //    if (name == L"Port") return object.Port();
+    //    return {};
+    //}
+}
 
 using namespace std::literals;
 using namespace winrt;
