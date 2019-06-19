@@ -84,6 +84,12 @@ namespace winrt
         return {};
     }
 
+    // TODO:
+    // 1. get rid of bind_member. 
+    // 2. Just use bind function.
+    // 3. Update xaml_binding to take a pair of delegates and infer type?
+    // 4. Use delegates rather than virtual accessor vtable.
+
     //xaml_binding bind(Windows::Foundation::Uri const& object, hstring const& name)
     //{
     //    if (name == L"Domain") return object.Domain();
