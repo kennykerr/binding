@@ -1,7 +1,7 @@
 #pragma once
 
 // TODO: This goes in windows.foundation.h
-namespace winrt
+namespace winrt::impl
 {
     template <typename T>
     class has_bind_member
@@ -40,7 +40,10 @@ namespace winrt
             return object.bind(name);
         }
     }
+}
 
+namespace winrt
+{
     struct binding
     {
         binding() noexcept
@@ -165,14 +168,14 @@ namespace winrt
 
             bool can_bind() final
             {
-                return can_bind_v<type>;
+                return impl::can_bind_v<type>;
             }
 
             binding bind([[maybe_unused]] hstring const& name) final
             {
-                if constexpr (can_bind_v<type>)
+                if constexpr (impl::can_bind_v<type>)
                 {
-                    return bind_member((*this)(), name);
+                    return impl::bind_member((*this)(), name);
                 }
 
                 return {};
