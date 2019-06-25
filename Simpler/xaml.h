@@ -75,9 +75,17 @@ namespace winrt
         {
         }
 
+        template <typename Get, typename = std::enable_if_t<std::is_invocable_v<Get>>>
+        binding(Get && get_self) : binding
+        {
+            std::forward<Get>(get_self),
+            [](auto&&) {}
+        }
+        {
+        }
+
         template <typename Get, typename Set>
-        binding(Get&& get_self, Set&& set_self) :
-            m_accessor
+        binding(Get&& get_self, Set&& set_self) : m_accessor
         {
             std::make_unique<accessor<Get, Set>>(
                 std::forward<Get>(get_self),

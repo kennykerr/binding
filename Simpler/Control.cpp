@@ -1,12 +1,6 @@
 #include "pch.h"
 #include "xaml.h"
 
-// TODO:
-// 1. get rid of bind_member. 
-// 2. Just use bind function.
-// 3. Update xaml_binding to take a pair of delegates and infer type?
-// 4. Use delegates rather than virtual accessor vtable.
-
 namespace winrt
 {
     binding bind(Windows::Foundation::Uri const& object, hstring const& name)
@@ -16,20 +10,19 @@ namespace winrt
             [object]
             {
                 return object.Domain();
-            },
-            [](auto&&) {}
+            }
         };
 
         return {};
     }
 
-    //xaml_binding bind(Windows::Foundation::Numerics::float3& object, hstring const& name)
-    //{
-    //    if (name == L"x") return object.x;
-    //    if (name == L"y") return object.y;
-    //    if (name == L"z") return object.z;
-    //    return {};
-    //}
+    binding bind(Windows::Foundation::Numerics::float3& object, hstring const& name)
+    {
+        if (name == L"x") return object.x;
+        if (name == L"y") return object.y;
+        if (name == L"z") return object.z;
+        return {};
+    }
 
     binding bind(Windows::UI::Composition::SpriteVisual const& object, hstring const& name)
     {
@@ -41,7 +34,19 @@ namespace winrt
             },
             [object](auto&& value)
             {
-                    object.Comment(value);
+                object.Comment(value);
+            }
+        };
+
+        if (name == L"Offset") return
+        {
+            [object]
+            {
+                return object.Offset();
+            },
+            [object](auto&& value)
+            {
+                object.Offset(value);
             }
         };
 
