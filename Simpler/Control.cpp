@@ -35,8 +35,14 @@ namespace winrt
     {
         if (name == L"Comment") return
         {
-            [object] { return object.Comment(); },
-            [object](auto&& value) { object.Comment(value); }
+            [object]
+            {
+                return object.Comment();
+            },
+            [object](auto&& value)
+            {
+                    object.Comment(value);
+            }
         };
 
         return {};

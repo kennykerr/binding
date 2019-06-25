@@ -63,66 +63,66 @@ namespace winrt
         {
         }
 
-            template <typename T, typename = std::enable_if_t<std::is_base_of_v<Windows::Foundation::IUnknown, T>>>
-            binding(T const& object) : binding
+        template <typename T, typename = std::enable_if_t<std::is_base_of_v<Windows::Foundation::IUnknown, T>>>
+        binding(T const& object) : binding
+        {
+            [object]
             {
-                [object]
-                {
-                    return object;
-                },
-                [](T const&) {}
-            }
+                return object;
+            },
+            [](T const&) {}
+        }
+        {
+        }
+
+        template <typename Get, typename Set>
+        binding(Get&& get_self, Set&& set_self) :
+            m_accessor
+        {
+            std::make_unique<accessor<Get, Set>>(
+                std::forward<Get>(get_self),
+                std::forward<Set>(set_self))
+        }
+        {
+        }
+
+        Windows::Foundation::IInspectable get() const
+        {
+            if (m_accessor)
             {
+                return m_accessor->get();
             }
 
-                template <typename Get, typename Set>
-                binding(Get&& get_self, Set&& set_self) :
-                    m_accessor
-                {
-                    std::make_unique<accessor<Get, Set>>(
-                        std::forward<Get>(get_self),
-                        std::forward<Set>(set_self))
-                }
-                {
-                }
+            return nullptr;
+        }
 
-                Windows::Foundation::IInspectable get() const
-                {
-                    if (m_accessor)
-                    {
-                        return m_accessor->get();
-                    }
+        void set(Windows::Foundation::IInspectable const& value) const
+        {
+            if (m_accessor)
+            {
+                m_accessor->set(value);
+            }
+        }
 
-                    return nullptr;
-                }
+        bool can_bind() const
+        {
+            if (m_accessor)
+            {
+                return m_accessor->can_bind();
+            }
 
-                void set(Windows::Foundation::IInspectable const& value) const
-                {
-                    if (m_accessor)
-                    {
-                        m_accessor->set(value);
-                    }
-                }
+            return false;
+        }
 
-                bool can_bind() const
-                {
-                    if (m_accessor)
-                    {
-                        return m_accessor->can_bind();
-                    }
+        binding bind(hstring const& name) const
+        {
+            if (m_accessor)
+            {
+                return m_accessor->bind(name);
+            }
 
-                    return false;
-                }
-
-                binding bind(hstring const& name) const
-                {
-                    if (m_accessor)
-                    {
-                        return m_accessor->bind(name);
-                    }
-
-                    return {};
-                }
+            return {};
+        }
 
     private:
 
@@ -175,117 +175,9 @@ namespace winrt
     };
 }
 
-// TODO: this goes into windows.ui.xaml.h and forward declars the .Data/.Markup stuff?
+// TODO: this goes into windows.ui.xaml.h and forward declares the .Data/.Markup stuff?
 namespace winrt::impl
 {
-    struct bind_object;
-
-    struct bind_property : implements<bind_property, Windows::UI::Xaml::Data::ICustomProperty>
-    {
-        bind_property(com_ptr<bind_object>&& object, binding&& binding, hstring const& name) :
-            m_object(std::move(object)),
-            m_binding(std::move(binding)),
-            m_name(name)
-        {
-        }
-
-        auto GetValue(Windows::Foundation::IInspectable const&) const
-        {
-            return m_binding.get();
-        }
-
-        void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const& value);
-
-        bool CanWrite() const noexcept
-        {
-            return true;
-        }
-
-        bool CanRead() const noexcept
-        {
-            return true;
-        }
-
-        Windows::UI::Xaml::Interop::TypeName Type() const noexcept
-        {
-            // TODO: xaml_typename<T> from the binding
-            return{};
-        }
-
-        hstring Name() const noexcept
-        {
-            return {};
-        }
-
-        Windows::Foundation::IInspectable GetIndexedValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
-        {
-            return {};
-        }
-
-        void SetIndexedValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
-        {
-        }
-
-    private:
-        com_ptr<bind_object> m_object;
-        binding m_binding;
-        hstring m_name;
-    };
-
-    struct bind_object : implements<bind_object, Windows::UI::Xaml::Data::ICustomPropertyProvider, Windows::UI::Xaml::Data::INotifyPropertyChanged>
-    {
-        bind_object(binding&& binding) :
-            m_binding(std::move(binding))
-        {
-        }
-
-        void property_changed(hstring const& name)
-        {
-            m_changed(*this, Windows::UI::Xaml::Data::PropertyChangedEventArgs(name));
-        }
-
-        event_token PropertyChanged(Windows::UI::Xaml::Data::PropertyChangedEventHandler const& handler)
-        {
-            return m_changed.add(handler);
-        }
-
-        void PropertyChanged(winrt::event_token const& token)
-        {
-            m_changed.remove(token);
-        }
-
-        Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& member)
-        {
-            return make<bind_property>(get_strong(), m_binding.bind(member), member);
-        }
-
-        Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const&, Windows::UI::Xaml::Interop::TypeName const&) const noexcept
-        {
-            return {};
-        }
-
-        hstring GetStringRepresentation() const noexcept
-        {
-            return {};
-        }
-
-        Windows::UI::Xaml::Interop::TypeName Type() const noexcept
-        {
-            // TODO: xaml_typename<T> from the binding
-            return {};
-        }
-
-    private:
-        binding m_binding;
-        event<Windows::UI::Xaml::Data::PropertyChangedEventHandler> m_changed;
-    };
-
-    inline void bind_property::SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const& value)
-    {
-        m_binding.set(value);
-        m_object->property_changed(m_name);
-    }
-
     struct xaml_registry
     {
         template <typename T>
@@ -399,6 +291,7 @@ namespace winrt
 
         using base_type = xaml_type<D, R, B, I...>;
 
+        // TODO: weak/strong reference?
         static inline D* s_last_type;
 
         xaml_type(hstring const& uri)
@@ -414,7 +307,65 @@ namespace winrt
 
     private:
 
-        struct xaml_member : implements<xaml_member, Windows::UI::Xaml::Markup::IXamlMember>
+        struct xaml_member;
+
+        struct bind_property : implements<bind_property, Windows::UI::Xaml::Data::ICustomProperty>
+        {
+            bind_property(com_ptr<xaml_member> && object, binding&& binding, hstring const& name) :
+                m_object(std::move(object)),
+                m_binding(std::move(binding)),
+                m_name(name)
+            {
+            }
+
+            auto GetValue(Windows::Foundation::IInspectable const&) const
+            {
+                return m_binding.get();
+            }
+
+            void SetValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const& value)
+            {
+                m_binding.set(value);
+                m_object->property_changed(m_name);
+            }
+
+            bool CanWrite() const noexcept
+            {
+                return true;
+            }
+
+            bool CanRead() const noexcept
+            {
+                return true;
+            }
+
+            Windows::UI::Xaml::Interop::TypeName Type() const noexcept
+            {
+                // TODO: xaml_typename<T> from the binding
+                return{};
+            }
+
+            hstring Name() const noexcept
+            {
+                return {};
+            }
+
+            Windows::Foundation::IInspectable GetIndexedValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
+            {
+                return {};
+            }
+
+            void SetIndexedValue(Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&, Windows::Foundation::IInspectable const&) const noexcept
+            {
+            }
+
+        private:
+            com_ptr<xaml_member> m_object;
+            binding m_binding;
+            hstring m_name;
+        };
+
+        struct xaml_member : implements<xaml_member, Windows::UI::Xaml::Markup::IXamlMember, Windows::UI::Xaml::Data::ICustomPropertyProvider, Windows::UI::Xaml::Data::INotifyPropertyChanged>
         {
             xaml_member(com_ptr<D>&& object, hstring const& name) :
                 m_object(std::move(object)),
@@ -427,7 +378,7 @@ namespace winrt
             {
                 if (m_binding.can_bind())
                 {
-                    return make<impl::bind_object>(std::move(m_binding));
+                    return *this;
                 }
                 else
                 {
@@ -461,9 +412,21 @@ namespace winrt
                 return {};
             }
 
-            Windows::UI::Xaml::Markup::IXamlType Type() const noexcept
+            auto Type() const noexcept
             {
-                return {};
+                struct result
+                {
+                    operator Windows::UI::Xaml::Markup::IXamlType()
+                    {
+                        return {};
+                    }
+                    operator Windows::UI::Xaml::Interop::TypeName()
+                    {
+                        return {};
+                    }
+                };
+
+                return result{};
             }
 
             Windows::UI::Xaml::Markup::IXamlType TargetType() const noexcept
@@ -471,11 +434,42 @@ namespace winrt
                 return {};
             }
 
+            Windows::UI::Xaml::Data::ICustomProperty GetCustomProperty(hstring const& member)
+            {
+                return make<bind_property>(get_strong(), m_binding.bind(member), member);
+            }
+
+            Windows::UI::Xaml::Data::ICustomProperty GetIndexedProperty(hstring const&, Windows::UI::Xaml::Interop::TypeName const&) const noexcept
+            {
+                return {};
+            }
+
+            hstring GetStringRepresentation() const noexcept
+            {
+                return {};
+            }
+
+            void property_changed(hstring const& name)
+            {
+                m_changed(*this, Windows::UI::Xaml::Data::PropertyChangedEventArgs(name));
+            }
+
+            event_token PropertyChanged(Windows::UI::Xaml::Data::PropertyChangedEventHandler const& handler)
+            {
+                return m_changed.add(handler);
+            }
+
+            void PropertyChanged(winrt::event_token const& token)
+            {
+                m_changed.remove(token);
+            }
+
         private:
 
             com_ptr<D> m_object;
             hstring const m_name;
             binding m_binding;
+            event<Windows::UI::Xaml::Data::PropertyChangedEventHandler> m_changed;
         };
 
         struct xaml_type_instance : implements<xaml_type_instance, Windows::UI::Xaml::Markup::IXamlType>
