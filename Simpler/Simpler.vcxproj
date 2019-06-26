@@ -315,7 +315,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="xaml.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>

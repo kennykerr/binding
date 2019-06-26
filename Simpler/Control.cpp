@@ -1,71 +1,12 @@
 #include "pch.h"
-#include "xaml.h"
 
 namespace winrt
 {
-    inline binding bind(Windows::Foundation::Uri const& object, hstring const& name)
-    {
-        if (name == L"Domain") return
-        {
-            [object]
-            {
-                return object.Domain();
-            }
-        };
-
-        return {};
-    }
-
-    binding bind(Windows::Foundation::Numerics::float3& object, hstring const& name)
+    xaml_binding bind(Windows::Foundation::Numerics::float3& object, hstring const& name)
     {
         if (name == L"x") return object.x;
         if (name == L"y") return object.y;
         if (name == L"z") return object.z;
-        return {};
-    }
-
-    binding bind(Windows::UI::Composition::InsetClip const& object, hstring const& name)
-    {
-        if (name == L"BottomInset") return
-        {
-            [object]
-            {
-                return object.BottomInset();
-            },
-            [object](auto&& value)
-            {
-                object.BottomInset(value);
-            }
-        };
-        return {};
-    }
-
-    binding bind(Windows::UI::Composition::SpriteVisual const& object, hstring const& name)
-    {
-        if (name == L"Comment") return
-        {
-            [object]
-            {
-                return object.Comment();
-            },
-            [object](auto&& value)
-            {
-                object.Comment(value);
-            }
-        };
-
-        if (name == L"Offset") return
-        {
-            [object]
-            {
-                return object.Offset();
-            },
-            [object](auto&& value)
-            {
-                object.Offset(value);
-            }
-        };
-
         return {};
     }
 }
@@ -93,7 +34,7 @@ struct SampleControl : xaml_user_control<SampleControl>
         return L"Sample.Control";
     }
 
-    binding bind(hstring const& name)
+    xaml_binding bind(hstring const& name)
     {
         if (name == L"Counter")
         {
@@ -126,13 +67,19 @@ struct SampleControl : xaml_user_control<SampleControl>
     SampleControl() : base_type(L"ms-appx:///Control.xaml")
     {
         auto compositor = ElementCompositionPreview::GetElementVisual(*this).Compositor();
+        auto parent = compositor.CreateContainerVisual();
         m_visual = compositor.CreateSpriteVisual();
+        parent.Children().InsertAtTop(m_visual);
+        detach_abi(parent);
         m_visual.Brush(compositor.CreateColorBrush({ 128, 255, 0, 0 }));
         m_visual.Size({ 100,100 });
         ElementCompositionPreview::SetElementChildVisual(*this, m_visual);
         m_visual.Comment(L"Default");
         m_clip = compositor.CreateInsetClip();
         m_clip.BottomInset(123.5);
+
+        // This is why we need interfaces to be bindable:
+        // auto result = m_visual.Parent().Children().First().Current().Comment();
 
         DataContext(*this);
 
