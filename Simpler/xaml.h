@@ -1,5 +1,3 @@
-#pragma once
-
 // TODO: This goes in windows.foundation.h
 namespace winrt::impl
 {
@@ -31,6 +29,8 @@ namespace winrt::impl
     template <typename T>
     auto bind_member(T&& object, hstring const& name)
     {
+        static_assert(can_bind_v<T>);
+
         if constexpr (has_bind_free<T>::value)
         {
             return winrt::bind(object, name);
@@ -40,155 +40,58 @@ namespace winrt::impl
             return object.bind(name);
         }
     }
-}
 
-namespace winrt
-{
-    struct binding
+    struct binding_base
     {
-        binding() noexcept
+        virtual Windows::Foundation::IInspectable get() = 0;
+        virtual void set(Windows::Foundation::IInspectable const& value) = 0;
+        virtual bool can_bind() = 0;
+        virtual binding bind(hstring const& name) = 0;
+        virtual Windows::UI::Xaml::Interop::TypeName type() = 0;
+    };
+
+    template <typename Get, typename Set>
+    struct binding_implementation final : binding_base, Get, Set
+    {
+        using value_type = decltype(std::declval<Get>()());
+
+        binding_implementation(Get&& get_self, Set&& set_self) :
+            Get(std::forward<Get>(get_self)),
+            Set(std::forward<Set>(set_self))
         {
         }
 
-        // TODO: add overloads that take leading strong/weak reference
-        template <typename T, typename = std::enable_if_t<!std::is_base_of_v<Windows::Foundation::IUnknown, T>>>
-        binding(T& reference) : binding
+        Windows::Foundation::IInspectable get() final
         {
-            [&]
+            return box_value((*this)());
+        }
+
+        void set(Windows::Foundation::IInspectable const& value) final
+        {
+            (*this)(unbox_value<value_type>(value));
+        }
+
+        bool can_bind() final
+        {
+            return impl::can_bind_v<value_type>;
+        }
+
+        binding bind([[maybe_unused]] hstring const& name) final
+        {
+            if constexpr (impl::can_bind_v<value_type>)
             {
-                return reference;
-            },
-            [&](T const& value)
-            {
-                reference = value;
-            }
-        }
-        {
-        }
-
-        template <typename T, typename = std::enable_if_t<std::is_base_of_v<Windows::Foundation::IUnknown, T>>>
-        binding(T const& object) : binding
-        {
-            [object]
-            {
-                return object;
-            },
-            [](T const&) {}
-        }
-        {
-        }
-
-        template <typename Get, typename = std::enable_if_t<std::is_invocable_v<Get>>>
-        binding(Get && get_self) : binding
-        {
-            std::forward<Get>(get_self),
-            [](auto&&) {}
-        }
-        {
-        }
-
-        template <typename Get, typename Set>
-        binding(Get&& get_self, Set&& set_self) : m_accessor
-        {
-            std::make_unique<accessor<Get, Set>>(
-                std::forward<Get>(get_self),
-                std::forward<Set>(set_self))
-        }
-        {
-        }
-
-        Windows::Foundation::IInspectable get() const
-        {
-            if (m_accessor)
-            {
-                return m_accessor->get();
-            }
-
-            return nullptr;
-        }
-
-        void set(Windows::Foundation::IInspectable const& value) const
-        {
-            if (m_accessor)
-            {
-                m_accessor->set(value);
-            }
-        }
-
-        bool can_bind() const
-        {
-            if (m_accessor)
-            {
-                return m_accessor->can_bind();
-            }
-
-            return false;
-        }
-
-        binding bind(hstring const& name) const
-        {
-            if (m_accessor)
-            {
-                return m_accessor->bind(name);
+                return impl::bind_member((*this)(), name);
             }
 
             return {};
         }
 
-    private:
-
-        struct accessor_abi
+        Windows::UI::Xaml::Interop::TypeName type() final
         {
-            virtual Windows::Foundation::IInspectable get() = 0;
-            virtual void set(Windows::Foundation::IInspectable const& value) = 0;
-            virtual bool can_bind() = 0;
-            virtual binding bind(hstring const& name) = 0;
-        };
-
-        template <typename Get, typename Set>
-        struct accessor final : accessor_abi, Get, Set
-        {
-            using type = decltype(std::declval<Get>()());
-
-            accessor(Get&& get_self, Set&& set_self) :
-                Get(std::forward<Get>(get_self)),
-                Set(std::forward<Set>(set_self))
-            {
-            }
-
-            Windows::Foundation::IInspectable get() final
-            {
-                return box_value((*this)());
-            }
-
-            void set(Windows::Foundation::IInspectable const& value) final
-            {
-                (*this)(unbox_value<type>(value));
-            }
-
-            bool can_bind() final
-            {
-                return impl::can_bind_v<type>;
-            }
-
-            binding bind([[maybe_unused]] hstring const& name) final
-            {
-                if constexpr (impl::can_bind_v<type>)
-                {
-                    return impl::bind_member((*this)(), name);
-                }
-
-                return {};
-            }
-        };
-
-        std::unique_ptr<accessor_abi> m_accessor;
+            return xaml_typename<value_type>();
+        }
     };
-}
 
-// TODO: this goes into windows.ui.xaml.h and forward declares the .Data/.Markup stuff?
-namespace winrt::impl
-{
     struct xaml_registry
     {
         template <typename T>
@@ -245,6 +148,100 @@ namespace winrt::impl
 
 namespace winrt
 {
+    template <typename T, typename>
+    binding::binding(T& reference) : binding
+    {
+        [&]
+        {
+            return reference;
+        },
+        [&](T const& value)
+        {
+            reference = value;
+        }
+    }
+    {
+    }
+
+        template <typename T, typename>
+        binding::binding(T const& object) : binding
+        {
+            [object]
+            {
+                return object;
+            },
+            [](T const&) {}
+        }
+        {
+        }
+
+            template <typename Get, typename>
+            binding::binding(Get&& get_self) : binding
+            {
+                std::forward<Get>(get_self),
+                [](auto&&) {}
+            }
+            {
+            }
+
+            template <typename Get, typename Set>
+            binding::binding(Get&& get_self, Set&& set_self) : m_binding
+            {
+                std::make_unique<impl::binding_implementation<Get, Set>>(
+                    std::forward<Get>(get_self),
+                    std::forward<Set>(set_self))
+            }
+            {
+            }
+
+            inline auto binding::get() const
+            {
+                if (m_binding)
+                {
+                    return m_binding->get();
+                }
+
+                return Windows::Foundation::IInspectable{};
+            }
+
+            inline auto binding::set(Windows::Foundation::IInspectable const& value) const
+            {
+                if (m_binding)
+                {
+                    m_binding->set(value);
+                }
+            }
+
+            inline auto binding::can_bind() const
+            {
+                if (m_binding)
+                {
+                    return m_binding->can_bind();
+                }
+
+                return false;
+            }
+
+            inline auto binding::bind(hstring const& name) const
+            {
+                if (m_binding)
+                {
+                    return m_binding->bind(name);
+                }
+
+                return binding{};
+            }
+
+            inline auto binding::type() const
+            {
+                if (m_binding)
+                {
+                    return m_binding->type();
+                }
+
+                return Windows::UI::Xaml::Interop::TypeName{};
+            }
+
     template <typename D, bool Register = true>
     struct xaml_registration
     {
@@ -352,8 +349,7 @@ namespace winrt
 
             Windows::UI::Xaml::Interop::TypeName Type() const noexcept
             {
-                // TODO: xaml_typename<T> from the binding
-                return{};
+                return m_binding.type();
             }
 
             hstring Name() const noexcept

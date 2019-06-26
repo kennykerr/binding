@@ -3,7 +3,7 @@
 
 namespace winrt
 {
-    binding bind(Windows::Foundation::Uri const& object, hstring const& name)
+    inline binding bind(Windows::Foundation::Uri const& object, hstring const& name)
     {
         if (name == L"Domain") return
         {
@@ -21,6 +21,22 @@ namespace winrt
         if (name == L"x") return object.x;
         if (name == L"y") return object.y;
         if (name == L"z") return object.z;
+        return {};
+    }
+
+    binding bind(Windows::UI::Composition::InsetClip const& object, hstring const& name)
+    {
+        if (name == L"BottomInset") return
+        {
+            [object]
+            {
+                return object.BottomInset();
+            },
+            [object](auto&& value)
+            {
+                object.BottomInset(value);
+            }
+        };
         return {};
     }
 
@@ -70,6 +86,7 @@ struct SampleControl : xaml_user_control<SampleControl>
     IObservableVector<int> m_list{ single_threaded_observable_vector<int>() };
     Uri m_uri{ L"http://kennykerr.ca/about" };
     SpriteVisual m_visual{ nullptr };
+    InsetClip m_clip{ nullptr };
 
     static hstring type_name()
     {
@@ -98,6 +115,11 @@ struct SampleControl : xaml_user_control<SampleControl>
             return m_visual;
         }
 
+        if (name == L"Clip")
+        {
+            return m_clip;
+        }
+
         return {};
     }
 
@@ -109,6 +131,8 @@ struct SampleControl : xaml_user_control<SampleControl>
         m_visual.Size({ 100,100 });
         ElementCompositionPreview::SetElementChildVisual(*this, m_visual);
         m_visual.Comment(L"Default");
+        m_clip = compositor.CreateInsetClip();
+        m_clip.BottomInset(123.5);
 
         DataContext(*this);
 
