@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "winrt/xaml.h"
 
 using namespace winrt;
 using namespace Windows::ApplicationModel::Activation;

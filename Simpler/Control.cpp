@@ -1,15 +1,5 @@
 #include "pch.h"
-
-namespace winrt
-{
-    xaml_binding bind(Windows::Foundation::Numerics::float3& object, hstring const& name)
-    {
-        if (name == L"x") return object.x;
-        if (name == L"y") return object.y;
-        if (name == L"z") return object.z;
-        return {};
-    }
-}
+#include "winrt/xaml.h"
 
 using namespace std::literals;
 using namespace winrt;
@@ -67,19 +57,13 @@ struct SampleControl : xaml_user_control<SampleControl>
     SampleControl() : base_type(L"ms-appx:///Control.xaml")
     {
         auto compositor = ElementCompositionPreview::GetElementVisual(*this).Compositor();
-        auto parent = compositor.CreateContainerVisual();
         m_visual = compositor.CreateSpriteVisual();
-        parent.Children().InsertAtTop(m_visual);
-        detach_abi(parent);
         m_visual.Brush(compositor.CreateColorBrush({ 128, 255, 0, 0 }));
         m_visual.Size({ 100,100 });
         ElementCompositionPreview::SetElementChildVisual(*this, m_visual);
         m_visual.Comment(L"Default");
         m_clip = compositor.CreateInsetClip();
         m_clip.BottomInset(123.5);
-
-        // This is why we need interfaces to be bindable:
-        // auto result = m_visual.Parent().Children().First().Current().Comment();
 
         DataContext(*this);
 
