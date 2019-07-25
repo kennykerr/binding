@@ -14,6 +14,16 @@ struct MainPage : xaml_page<MainPage>
 
 struct App : xaml_app<App>
 {
+    App()
+    {
+        UnhandledException(
+            [](Windows::Foundation::IInspectable const&, Windows::UI::Xaml::UnhandledExceptionEventArgs const& e)
+            {
+                hstring message{ e.Message() };
+                (void)message;
+            });
+    }
+
     void OnLaunched(LaunchActivatedEventArgs const&)
     {
         auto window = Window::Current();

@@ -63,4 +63,7 @@
       <Filter>Build</Filter>
     </AppxManifest>
   </ItemGroup>
+  <ItemGroup>
+    <Page Include="CustomDPControl.xaml" />
+  </ItemGroup>
 </Project>

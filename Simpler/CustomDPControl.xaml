@@ -1,0 +1,16 @@
+﻿<Control x:Class="Sample.CustomDPControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Sample"
+    >
+
+    <Control.Template>
+        <ControlTemplate TargetType="local:CustomDPControl" >
+            <Grid
+                Width="200"
+                Height="200"
+                Background="{Binding SelectedBrush, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+        </ControlTemplate>
+    </Control.Template>
+
+</Control>
