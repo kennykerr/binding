@@ -723,5 +723,8 @@ namespace winrt
 
     template <typename D, typename... I>
     using xaml_user_control = xaml_type<D, true, Windows::UI::Xaml::Controls::UserControlT, I...>;
+
+    template <typename D, typename... I>
+    using xaml_control = xaml_type<D, true, Windows::UI::Xaml::Controls::ControlT, I...>;
 }
 #endif
